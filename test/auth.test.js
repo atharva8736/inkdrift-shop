@@ -112,3 +112,30 @@ test('logout kills the server-side session even if the cookie is replayed; CSRF 
   assert.equal(form.status, 415);
   await ctx.close();
 });
+
+test('fake or throwaway sign-ups are refused and weak passwords explained', async () => {
+  const ctx = await boot(); const c = ctx.client();
+  const dis = await c.post('/api/auth/signup', { name: 'Asha Rao', email: 'x@mailinator.com', password: 'correct-horse-9' });
+  assert.equal(dis.status, 400); assert.equal(dis.json.error.code, 'DISPOSABLE_EMAIL');
+  const noNum = await c.post('/api/auth/signup', { name: 'Asha Rao', email: 'a@real.com', password: 'onlyletters' });
+  assert.equal(noNum.json.error.code, 'WEAK_PASSWORD');
+  const badName = await c.post('/api/auth/signup', { name: '12', email: 'a@real.com', password: 'longenough1' });
+  assert.equal(badName.json.error.code, 'INVALID_NAME');
+  assert.equal(ctx.mailbox.length, 0);                     // nothing was emailed, nothing was created
+  assert.equal((await ctx.db.prepare('SELECT COUNT(*) c FROM users').get()).c, 0);
+  await ctx.close();
+});
+
+test('with checkEmailDomain on, a domain that cannot receive mail is refused', async () => {
+  const ctx = await boot({ cfg: { checkEmailDomain: true } }); const c = ctx.client();
+  const r = await c.post('/api/auth/signup', { name: 'Asha Rao', email: 'a@this-domain-does-not-exist-inkdrift.invalid', password: 'longenough1' });
+  assert.equal(r.status, 400); assert.equal(r.json.error.code, 'INVALID_EMAIL');
+  await ctx.close();
+});
+
+test('Google button without credentials sends the user back to login with a clear message', async () => {
+  const ctx = await boot(); const c = ctx.client();
+  const r = await c.get('/api/auth/google');
+  assert.equal(r.status, 302); assert.match(r.headers.get('location'), /auth_error=google_not_configured/);
+  await ctx.close();
+});

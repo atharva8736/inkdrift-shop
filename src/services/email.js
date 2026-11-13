@@ -16,7 +16,23 @@ export function resendTransport(cfg) {
   };
 }
 
-export function createEmailService(cfg, transport = resendTransport(cfg)) {
+// Real email delivery through the Brevo transactional API. EMAIL_FROM must be a sender verified in Brevo.
+export function brevoTransport(cfg) {
+  const m = String(cfg.email.from).match(/^\s*(?:"?([^"<]*?)"?\s*)?<([^>]+)>\s*$/);
+  const sender = m ? { name: (m[1] || cfg.email.brand).trim(), email: m[2].trim() } : { name: cfg.email.brand, email: String(cfg.email.from).trim() };
+  return async ({ to, subject, html, text }) => {
+    const res = await fetch(cfg.email.apiUrl, {
+      method: 'POST',
+      headers: { 'api-key': cfg.email.apiKey, 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ sender, to: [{ email: to }], subject, htmlContent: html, textContent: text }),
+      signal: AbortSignal.timeout(15_000),
+    });
+    if (!res.ok) throw new Error(`Brevo responded ${res.status}: ${(await res.text()).slice(0, 300)}`);
+    return res.json().catch(() => ({}));
+  };
+}
+
+export function createEmailService(cfg, transport = cfg.email.provider === 'brevo' ? brevoTransport(cfg) : resendTransport(cfg)) {
   const brand = cfg.email.brand;
   return {
     async sendOtp({ to, name, code, ttlMinutes }) {

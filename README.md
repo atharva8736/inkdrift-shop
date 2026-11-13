@@ -17,7 +17,10 @@ See `.env.example`. Extras: `SESSION_TTL_DAYS, OTP_TTL_SECONDS, OTP_MAX_ATTEMPTS
 3. Authorized redirect URI: `APP_URL/api/auth/google/callback` (exact; add `http://localhost:3000/...` for dev).
 4. Copy Client ID/secret into `GOOGLE_CLIENT_ID/SECRET`. The Google button appears automatically once set.
 
-## 5. Email OTP (Resend)
+## 5. Email OTP (Brevo or Resend)
+**Brevo (no domain needed):** brevo.com → sign up → Senders, Domains & Dedicated IPs → add and verify a sender email (you click a link sent to it) → SMTP & API → API Keys → create → set `BREVO_API_KEY` and `EMAIL_FROM="Inkdrift <your-verified-sender@gmail.com>"`. Brevo is used automatically when `BREVO_API_KEY` is set.
+
+**Resend (needs your own domain):**
 resend.com → Domains → add & verify your domain (DNS SPF/DKIM) → API Keys → create → `RESEND_API_KEY`. Set `EMAIL_FROM` to an address on that domain. A failed send returns an error and does not burn the resend cooldown.
 
 ## 6. Payment gateway (YOUPI PG) and connecting it to your bank

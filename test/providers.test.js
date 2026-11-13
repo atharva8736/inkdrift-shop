@@ -65,3 +65,16 @@ test('config validation flags missing production secrets', async () => {
   assert.equal(fatalProblems(loadConfig({ NODE_ENV: 'production', APP_URL: 'https://x.com', SESSION_SECRET: 'y'.repeat(40), DATABASE_URL: 'libsql://x.turso.io', DATABASE_AUTH_TOKEN: 't' })).length, 0);
   assert.equal(validateConfig(loadConfig({ NODE_ENV: 'production', APP_URL: 'https://x.com', SESSION_SECRET: 'y'.repeat(40), RESEND_API_KEY: 'k', EMAIL_FROM: 'a@b.c', YOUPI_API_URL: 'https://p', YOUPI_MERCHANT_ID: 'm', YOUPI_MERCHANT_API_KEY: 'k', YOUPI_WEBHOOK_SECRET: 's', DATABASE_URL: 'libsql://x.turso.io', DATABASE_AUTH_TOKEN: 't' })).length, 0);
 });
+
+test('Brevo transport posts the documented request (sender parsed from EMAIL_FROM, api-key header)', async () => {
+  const { brevoTransport } = await import('../src/services/email.js');
+  const stub = await stubServer(() => ({ status: 201, json: { messageId: 'm1' } }));
+  const cfg = loadConfig({ BREVO_API_KEY: 'xkeysib-test', EMAIL_FROM: 'Inkdrift <hello@example.com>', EMAIL_API_URL: stub.url + '/v3/smtp/email' });
+  assert.equal(cfg.email.provider, 'brevo');
+  await brevoTransport(cfg)({ to: 'buyer@x.com', subject: 'S', html: '<b>h</b>', text: 't' });
+  const req = stub.requests[0], body = JSON.parse(req.body);
+  assert.equal(req.headers['api-key'], 'xkeysib-test');
+  assert.deepEqual(body.sender, { name: 'Inkdrift', email: 'hello@example.com' });
+  assert.deepEqual(body.to, [{ email: 'buyer@x.com' }]); assert.equal(body.htmlContent, '<b>h</b>');
+  await stub.close();
+});

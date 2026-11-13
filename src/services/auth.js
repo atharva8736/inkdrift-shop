@@ -1,18 +1,34 @@
 import { uuid, hashPassword, verifyPassword, burnPasswordTime, generateOtp, otpHash, safeEqual } from '../lib/crypto.js';
 import { HttpError, EMAIL_RE, normEmail } from '../lib/http.js';
 import { audit } from '../db.js';
+import dns from 'node:dns/promises';
+
+const DISPOSABLE = new Set(['mailinator.com','guerrillamail.com','guerrillamail.net','10minutemail.com','10minutemail.net','tempmail.com','temp-mail.org','yopmail.com','trashmail.com','throwawaymail.com','getnada.com','sharklasers.com','maildrop.cc','dispostable.com','fakeinbox.com','mintemail.com','mailnesia.com','tempail.com','emailondeck.com','mohmal.com']);
 
 export function createAuthService({ db, cfg, email }) {
   const now = () => Date.now();
   const byEmail = async (e) => db.prepare('SELECT * FROM users WHERE email = ?').get(e);
   const publicUser = (u) => ({ id: u.id, email: u.email, name: u.name, avatarUrl: u.avatar_url });
 
+  async function checkEmailDomain(e) {
+    const domain = e.split('@')[1] ?? '';
+    if (DISPOSABLE.has(domain)) throw new HttpError(400, 'DISPOSABLE_EMAIL', 'Temporary email addresses are not accepted. Use your real email.');
+    if (!cfg.checkEmailDomain) return;
+    try {
+      const mx = await Promise.race([dns.resolveMx(domain), new Promise((_, rej) => setTimeout(() => rej(Object.assign(new Error('timeout'), { code: 'ETIMEOUT' })), 3000))]);
+      if (!mx.length) throw Object.assign(new Error('no mx'), { code: 'ENODATA' });
+    } catch (err) {
+      if (['ENOTFOUND', 'ENODATA'].includes(err.code)) throw new HttpError(400, 'INVALID_EMAIL', 'That email domain cannot receive email. Check the spelling.');
+      /* a DNS hiccup must not block a real customer */
+    }
+  }
+
   function validateSignup({ name, email: e, password }) {
     const n = String(name ?? '').trim();
-    if (n.length < 2 || n.length > 80) throw new HttpError(400, 'INVALID_NAME', 'Enter your name (2 to 80 characters).');
+    if (n.length < 2 || n.length > 80 || !/\p{L}/u.test(n)) throw new HttpError(400, 'INVALID_NAME', 'Enter your name (2 to 80 characters).');
     if (!EMAIL_RE.test(e) || e.length > 254) throw new HttpError(400, 'INVALID_EMAIL', 'Enter a valid email address.');
     const p = String(password ?? '');
-    if (p.length < 8 || p.length > 128) throw new HttpError(400, 'WEAK_PASSWORD', 'Use a password of 8 to 128 characters.');
+    if (p.length < 8 || p.length > 128 || !/[A-Za-z]/.test(p) || !/\d/.test(p)) throw new HttpError(400, 'WEAK_PASSWORD', 'Use 8 or more characters with at least one letter and one number.');
     return n;
   }
 
@@ -48,6 +64,7 @@ export function createAuthService({ db, cfg, email }) {
     async signup(input) {
       const e = normEmail(input.email);
       const name = validateSignup({ ...input, email: e });
+      await checkEmailDomain(e);
       const existing = await byEmail(e);
       if (existing?.status === 'disabled') throw new HttpError(403, 'ACCOUNT_DISABLED', 'This account is disabled.');
       if (existing?.status === 'active') {

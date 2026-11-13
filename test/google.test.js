@@ -77,5 +77,5 @@ test('open redirects are blocked and Google is reported disabled when not config
   const s3 = await start(c, '/?order=abc#done'); assert.equal((await c.get(`/api/auth/google/callback?code=a&state=${s3.state}`)).headers.get('location'), '/?order=abc#done');
   await stub.close(); await ctx.close();
   const plain = await boot(); assert.equal((await plain.client().get('/api/config')).json.googleEnabled, false);
-  assert.equal((await plain.client().get('/api/auth/google')).status, 503); await plain.close();
+  assert.equal((await plain.client().get('/api/auth/google')).status, 302); await plain.close();
 });

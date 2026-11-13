@@ -105,6 +105,7 @@ export function createApp({ db, cfg, emailTransport, youpiClient, storage: stora
 
   // ---- Google OAuth 2.0 (authorization code + PKCE) ----
   app.get('/api/auth/google', authLimit, wrap(async (req, res) => {
+    if (!google.enabled()) return res.redirect('/?auth_error=google_not_configured#login');
     const { url, cookieValue } = google.begin(req.query.next);
     res.cookie(google.cookie, cookieValue, { httpOnly: true, sameSite: 'lax', secure: cfg.appUrl.startsWith('https://'), path: '/api/auth/google', maxAge: 10 * 60_000 });
     res.redirect(url);

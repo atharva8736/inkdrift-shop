@@ -480,6 +480,11 @@ footer{padding:110px 0 0;overflow:hidden;border-top:1px solid var(--line)}
 /* ---------- auth / dashboard additions ---------- */
 .gbtn{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;padding:15px 24px;border-radius:99px;background:#fff;color:#1f1f1f;font:600 14px var(--f-d);border:1px solid #dadce0;transition:transform .3s var(--out),box-shadow .3s}
 .gbtn:hover{transform:translateY(-3px);box-shadow:0 14px 40px rgba(0,0,0,.45)}.gbtn:active{transform:scale(.97)}
+.asub{color:var(--mut);margin:14px 0 24px;font-size:15px;line-height:1.5;max-width:46ch}
+.afoot{margin-top:20px;font-size:11px;letter-spacing:.08em;color:var(--mut);text-align:center;text-transform:uppercase}
+.pwm{display:flex;gap:5px;margin:-4px 0 6px}.pwm i{flex:1;height:4px;border-radius:3px;background:var(--line);transition:background .35s}
+.pwt{font-size:11px;color:var(--mut);margin:0 0 14px;letter-spacing:.04em}
+.gbtn{margin-bottom:0}#gWrap .or{margin:20px 0 22px}
 .or{display:flex;align-items:center;gap:14px;color:var(--mut);margin:22px 0}.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
 .ferr{color:#ff8a80;font-size:14px;min-height:20px;margin:6px 0 10px}
 .otp{display:flex;gap:10px;margin:24px 0 8px}
@@ -840,17 +845,19 @@ pack(id){
 </div></section>${footer()}`},
 
 login(){
-  const g=st.cfg.googleEnabled?`<div class="or mono"><span>or</span></div><a class="gbtn" href="/api/auth/google?next=${encodeURIComponent(st.cart.length?'/#checkout':'/#dashboard')}"><svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Continue with Google</a>`:'';
+  const g=`<a class="gbtn" href="/api/auth/google?next=${encodeURIComponent(st.cart.length?'/#checkout':'/#dashboard')}"><svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Continue with Google</a><div class="or mono"><span>or use your email</span></div>`;
   const cols=[[1,2,3,4,5,6,7,8],[2,10,11,12,13,14,15,16],[17,18,19,20,1,3,5,7]];
   const img=n=>{const p=Math.floor((n-1)/5)+1,k=(n-1)%5+1;return Ph(p,k)};
   return `<section class="auth">
   <div class="auth-l" aria-hidden="true">${cols.map(c=>`<div class="col">${[...c,...c].map(n=>`<img src="${img(n)}" alt="" loading="lazy">`).join('')}</div>`).join('')}</div>
   <div class="auth-r"><div class="form">
    <a class="logo cond" data-go="home" href="#home" style="font-size:44px">INK<span class="ital" style="font-size:50px">drift</span></a>
-   <h1 class="cond" style="font-size:clamp(60px,8vw,100px);margin-top:26px" id="aTitle">${chars('Welcome',0)} <span class="ital" style="color:var(--acc)">${chars('back',300)}</span></h1>
+   <h1 class="cond" style="font-size:clamp(46px,6vw,78px);margin-top:22px" id="aTitle">${chars('Welcome',0)} <span class="ital" style="color:var(--acc)">${chars('back',300)}</span></h1>
+   <p class="asub" id="aSub">Log in to download your wallpapers, or create a free account in seconds.</p>
+   <div id="gWrap">${g}</div>
    <div class="tabs" id="tabs"><button class="on" data-t="in">Log in</button><button data-t="up">Create account</button><i></i></div>
    <form id="aForm" class="form-swap" novalidate></form>
-   <div id="gWrap">${g}</div>
+   <p class="afoot mono" id="aFoot">Secure sign-in · we never share your email</p>
   </div></div></section>`},
 
 dashboard(){
@@ -987,21 +994,34 @@ function initPack(p){
 /* --- login --- */
 function initLogin(){
   let tab='in';const form=$('#aForm');
-  const fld=(id,type,label,extra='')=>`<div class="fld"><input id="${id}" type="${type}" placeholder=" " autocomplete="${type==='password'?(tab==='up'?'new-password':'current-password'):type==='email'?'email':'name'}"><label for="${id}">${label}</label>${extra}</div>`;
+  const fld=(id,type,label,extra='')=>`<div class="fld"><input id="${id}" type="${type}" placeholder=" " autocomplete="${type==='password'?(tab==='up'?'new-password':'current-password'):type==='email'?'email':'name'}" ${type==='email'?'inputmode="email" autocapitalize="off" spellcheck="false"':''} ${id==='aN'?'maxlength="80"':''}><label for="${id}">${label}</label>${extra}<div class="em" role="alert"></div></div>`;
   const eye='<button type="button" class="eye" data-eye>Show</button>';
   const setErr=m=>{const e=$('#aErr');if(e)e.textContent=m||''};
+  const fieldErr=(id,msg)=>{const i=$('#'+id);if(!i)return;const f=i.parentElement,em=$('.em',f);if(em)em.textContent=msg||'';f.classList.remove('err');if(msg){void f.offsetWidth;f.classList.add('err')}};
+  const EMAIL=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  const validate=(name,email,password)=>{
+    let ok=true,first=null;const bad=(id,m)=>{fieldErr(id,m);ok=false;first??=id};
+    if(tab==='up'&&(name.length<2||!/\p{L}/u.test(name)))bad('aN','Enter your full name.');
+    if(!EMAIL.test(email))bad('aE','Enter a valid email address, like you@gmail.com.');
+    if(!password)bad('aP','Enter your password.');
+    else if(tab==='up'&&(password.length<8||!/[A-Za-z]/.test(password)||!/\d/.test(password)))bad('aP','Use 8+ characters with at least one letter and one number.');
+    if(first)$('#'+first).focus();
+    return ok};
   const draw=()=>{
     form.classList.remove('form-swap');void form.offsetWidth;form.classList.add('form-swap');
-    form.innerHTML=(tab==='up'?fld('aN','text','Full name'):'')+fld('aE','email','Email')+fld('aP','password','Password',eye)+
+    form.innerHTML=(tab==='up'?fld('aN','text','Full name'):'')+fld('aE','email','Email')+fld('aP','password','Password',eye)+(tab==='up'?'<div class="pwm" id="pwm"><i></i><i></i><i></i><i></i></div><div class="pwt mono" id="pwt">Use 8+ characters with a letter and a number</div>':'')+
      `<p class="ferr" id="aErr" role="alert"></p><button class="btn block" type="submit"><span id="aBtn">${tab==='in'?'Log in':'Create account'}</span> <span class="arrow">→</span></button>`;
     $('[data-eye]').onclick=e=>{const i=$('#aP');i.type=i.type==='password'?'text':'password';e.target.textContent=i.type==='password'?'Show':'Hide'};
+    const sub=$('#aSub');if(sub)sub.textContent=tab==='in'?'Log in to download your wallpapers, or create a free account in seconds.':'Create your free account. We email you a 6-digit code to confirm it is really you.';
+    $$('#aForm input').forEach(i=>i.addEventListener('input',()=>fieldErr(i.id,'')));
+    if(tab==='up'){const pw=$('#aP');pw.addEventListener('input',()=>{const v=pw.value;let n=0;if(v.length>=8)n++;if(/[a-z]/.test(v)&&/[A-Z]/.test(v))n++;if(/\d/.test(v))n++;if(/[^A-Za-z0-9]/.test(v)||v.length>=12)n++;const col=['#ff5a4d','#ff9f43','#d8c24a','#3ddc97'][Math.max(0,n-1)];$$('#pwm i').forEach((b,k)=>{b.style.background=k<n?col:''});$('#pwt').textContent=!v?'Use 8+ characters with a letter and a number':['Too weak','Weak','Good','Strong'][Math.max(0,n-1)]})}
   };
   const bar=()=>{const b=$(`#tabs [data-t="${tab}"]`),i=$('#tabs i');if(!b||!i)return;i.style.left=b.offsetLeft+'px';i.style.width=b.offsetWidth+'px'};
   $$('#tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;$$('#tabs button').forEach(x=>x.classList.toggle('on',x===b));bar();draw()});
   draw();setTimeout(bar,60);document.fonts&&document.fonts.ready.then(bar);
   const q=new URLSearchParams(location.search);
   if(q.get('auth_error')){
-    const M={google_cancelled:'Google sign-in was cancelled.',google_failed:'Google sign-in failed. Please try again.',account_disabled:'This account is disabled.'};
+    const M={google_cancelled:'Google sign-in was cancelled.',google_failed:'Google sign-in failed. Please try again.',google_not_configured:'Google sign-in is not switched on yet. Please use your email for now.',account_disabled:'This account is disabled.'};
     setTimeout(()=>toast(M[q.get('auth_error')]||'Sign-in failed. Please try again.'),500);
     try{history.replaceState(null,'',location.pathname+'#login')}catch(_){}
   }
@@ -1009,7 +1029,7 @@ function initLogin(){
   form.onsubmit=async e=>{
     e.preventDefault();
     const email=$('#aE').value.trim(),password=$('#aP').value,name=$('#aN')?$('#aN').value.trim():'';
-    if(!email||!password||(tab==='up'&&!name)){setErr('Fill in every field.');$('#aE').parentElement.classList.remove('err');return}
+    if(!validate(name,email,password))return;
     const b=$('.btn',form),lbl=$('#aBtn').textContent;b.disabled=true;$('#aBtn').innerHTML='<span class="spin" style="display:inline-block"></span>';setErr('');
     try{
       if(tab==='up'){const r=await api('POST','/api/auth/signup',{name,email,password});otpScreen(email,r)}
@@ -1017,11 +1037,11 @@ function initLogin(){
     }catch(err){
       if(err.code==='EMAIL_NOT_VERIFIED'){try{const r=await api('POST','/api/auth/resend-otp',{email});otpScreen(email,r,'Your email is not verified yet. We sent a fresh code.')}catch(_){otpScreen(email,{},'Your email is not verified yet. Use the code we sent earlier, or request a new one.')}return}
       b.disabled=false;$('#aBtn').textContent=lbl;setErr(err.message);
-      const f=$('#aE').parentElement;f.classList.remove('err');void f.offsetWidth;f.classList.add('err');
+      if(err.code==='INVALID_EMAIL'||err.code==='DISPOSABLE_EMAIL'||err.code==='EMAIL_EXISTS'){setErr('');fieldErr('aE',err.message)}else if(err.code==='WEAK_PASSWORD'){setErr('');fieldErr('aP',err.message)}else if(err.code==='INVALID_NAME'){setErr('');fieldErr('aN',err.message)}
     }
   };
   function otpScreen(email,info,notice){
-    $('#tabs').style.display='none';const gw=$('#gWrap');if(gw)gw.style.display='none';
+    $('#tabs').style.display='none';const gw=$('#gWrap');if(gw)gw.style.display='none';['aSub','aFoot'].forEach(x=>{const e=$('#'+x);if(e)e.style.display='none'});
     $('#aTitle').style.fontSize='clamp(44px,5.4vw,72px)';$('#aTitle').innerHTML=`${chars('Check',0)} <span class="ital" style="color:var(--acc)">${chars('inbox',300)}</span>`;
     form.classList.remove('form-swap');void form.offsetWidth;form.classList.add('form-swap');
     form.innerHTML=`<p style="color:var(--bone-2)">${notice?esc(notice)+' ':''}Enter the 6-digit code we emailed to <b>${esc(email)}</b>.</p>
@@ -1044,7 +1064,7 @@ function initLogin(){
       if(exp>0)exp--;if(wait>0)wait--;
     };
     tick();const timer=setInterval(tick,1000);cleanups.push(()=>clearInterval(timer));
-    $('#chg').onclick=()=>{clearInterval(timer);$('#aTitle').style.fontSize='';$('#tabs').style.display='';if(gw)gw.style.display='';$('#aTitle').innerHTML=`${chars('Welcome',0)} <span class="ital" style="color:var(--acc)">${chars('back',300)}</span>`;tab='up';$$('#tabs button').forEach(x=>x.classList.toggle('on',x.dataset.t==='up'));draw();bar()};
+    $('#chg').onclick=()=>{clearInterval(timer);['aSub','aFoot'].forEach(x=>{const e=$('#'+x);if(e)e.style.display=''});$('#aTitle').style.fontSize='';$('#tabs').style.display='';if(gw)gw.style.display='';$('#aTitle').innerHTML=`${chars('Welcome',0)} <span class="ital" style="color:var(--acc)">${chars('back',300)}</span>`;tab='up';$$('#tabs button').forEach(x=>x.classList.toggle('on',x.dataset.t==='up'));draw();bar()};
     $('#resend').onclick=async()=>{
       $('#resend').disabled=true;setErr('');
       try{const r=await api('POST','/api/auth/resend-otp',{email});exp=r.expiresInSeconds||300;wait=r.resendInSeconds||60;ins.forEach(i=>i.value='');ins[0].focus();toast('A new code is on its way')}

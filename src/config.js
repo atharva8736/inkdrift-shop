@@ -27,11 +27,14 @@ export function loadConfig(env = process.env, overrides = {}) {
       tokenUrl: env.GOOGLE_TOKEN_URL || 'https://oauth2.googleapis.com/token',
     },
     email: {
-      apiKey: env.RESEND_API_KEY || '',
+      provider: env.BREVO_API_KEY ? 'brevo' : 'resend',
+      apiKey: env.BREVO_API_KEY || env.RESEND_API_KEY || '',
       from: env.EMAIL_FROM || '',
-      apiUrl: env.RESEND_API_URL || 'https://api.resend.com/emails',
+      apiUrl: env.EMAIL_API_URL || env.RESEND_API_URL || (env.BREVO_API_KEY ? 'https://api.brevo.com/v3/smtp/email' : 'https://api.resend.com/emails'),
       brand: env.BRAND_NAME || 'Inkdrift',
     },
+    // Reject sign-ups whose email domain cannot receive mail (on by default in production).
+    checkEmailDomain: env.CHECK_EMAIL_DOMAIN ? env.CHECK_EMAIL_DOMAIN === 'true' : env.NODE_ENV === 'production',
     otp: {
       ttlMs: int(env.OTP_TTL_SECONDS, 300) * 1000,
       maxAttempts: int(env.OTP_MAX_ATTEMPTS, 5),
@@ -67,7 +70,7 @@ export function validateConfig(cfg) {
   if (prod && !cfg.appUrl.startsWith('https://')) problems.push('APP_URL must be https:// in production');
   if (prod && cfg.dbUrl.startsWith('file:')) problems.push('DATABASE_URL (a Turso libsql:// URL) is required in production; a local file would be lost on serverless hosting');
   if (prod && cfg.dbUrl.startsWith('libsql:') && !cfg.dbAuthToken) problems.push('DATABASE_AUTH_TOKEN is required with a Turso DATABASE_URL');
-  if (!cfg.email.apiKey || !cfg.email.from) problems.push('RESEND_API_KEY and EMAIL_FROM are required to send OTP emails');
+  if (!cfg.email.apiKey || !cfg.email.from) problems.push('BREVO_API_KEY (or RESEND_API_KEY) and EMAIL_FROM are required to send OTP emails');
   if (!cfg.youpi.apiUrl || !cfg.youpi.merchantId || !cfg.youpi.apiKey || !cfg.youpi.webhookSecret) {
     problems.push('YOUPI_API_URL, YOUPI_MERCHANT_ID, YOUPI_MERCHANT_API_KEY and YOUPI_WEBHOOK_SECRET are required for payments');
   }
