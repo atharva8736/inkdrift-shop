@@ -1,0 +1,50 @@
+# Inkdrift – store with real backend
+
+Node ≥22.5, Express, SQLite. Frontend is `public/index.html` (same design as the preview).
+
+## 1. Features
+Google OAuth (code+PKCE+state+nonce, one account per email) · email/password signup with Resend OTP (6 digits, HMAC-hashed, 5-min expiry, 5 attempts, 60 s resend cooldown, 5 sends/h) · scrypt passwords · httpOnly sessions + CSRF header · server-priced orders and coupons · YOUPI UPI payments with signed webhook, server-side re-confirmation, duplicate prevention · entitlements per pack (bundle = itself + 4 packs) · private ZIP downloads only for owners · purchase history · admin CLI.
+
+## 2. APIs / services
+Google OAuth 2.0, Resend (`POST /emails`), YOUPI PG (`POST /api/v1/payments`, `GET /api/v1/payments/{id}`, webhook). Own routes: `/api/auth/*`, `/api/catalog`, `/api/quote`, `/api/orders[/:id[/cancel]]`, `/api/library`, `/api/download/:packId`, `/api/webhooks/youpi`, `/api/me`, `/api/health`.
+
+## 3. Environment variables
+See `.env.example`. Extras: `SESSION_TTL_DAYS, OTP_TTL_SECONDS, OTP_MAX_ATTEMPTS, OTP_RESEND_COOLDOWN_SECONDS, OTP_MAX_SENDS_PER_HOUR, YOUPI_WEBHOOK_MAX_AGE_MINUTES, YOUPI_TIMEOUT_MS, ORDER_PENDING_WINDOW_MINUTES, MAX_PAID_ORDERS_PER_USER_PER_DAY, BRAND_NAME`. Production start refuses to boot if required ones are missing.
+
+## 4. Google OAuth credentials
+1. console.cloud.google.com → new project → APIs & Services → OAuth consent screen (External; add scopes openid, email, profile; add yourself as test user, then Publish).
+2. Credentials → Create credentials → OAuth client ID → Web application.
+3. Authorized redirect URI: `APP_URL/api/auth/google/callback` (exact; add `http://localhost:3000/...` for dev).
+4. Copy Client ID/secret into `GOOGLE_CLIENT_ID/SECRET`. The Google button appears automatically once set.
+
+## 5. Email OTP (Resend)
+resend.com → Domains → add & verify your domain (DNS SPF/DKIM) → API Keys → create → `RESEND_API_KEY`. Set `EMAIL_FROM` to an address on that domain. A failed send returns an error and does not burn the resend cooldown.
+
+## 6. Payment gateway (YOUPI PG) and connecting it to your bank
+YOUPI is **not a bank-licensed gateway**. It watches your UPI receiving account for credit alerts and matches them to orders. Its own README calls it experimental, not for critical payments; it has no LICENSE file (package.json says "Commercial") – confirm you may use it.
+
+**Connect to your bank**
+1. Deploy YOUPI (payment-api, checkout-portal, merchant-admin, observers; Node ≥24, long-running host, HTTPS) following its README.
+2. In Merchant Admin → Receiving Accounts add your UPI ID (VPA) and payee name of the bank account that should receive money.
+3. Add an **observer** so YOUPI can see credits: Gmail observer (bank alert emails), Android observer app (pair via Merchant Admin → Observers & Pairing; reads bank SMS), or SMS/Google Messages observer. Make sure your bank sends credit alerts to that email/phone.
+4. For strongest safety, import your bank statement CSV in Merchant Admin regularly → payments become RECONCILED.
+5. Create a merchant → copy Merchant ID + API key → `YOUPI_MERCHANT_ID`, `YOUPI_MERCHANT_API_KEY`, set `YOUPI_API_URL`.
+6. In YOUPI set the webhook URL `APP_URL/api/webhooks/youpi` and a secret → `YOUPI_WEBHOOK_SECRET`.
+7. In YOUPI set `YOUPI_ALLOWED_ORIGINS` and `YOUPI_ALLOWED_RETURN_ORIGINS` to your storefront's exact HTTPS origin.
+8. Make a ₹ small real test purchase. Check your bank's / NPCI's terms on collecting business payments via a personal UPI ID (a current/merchant account is advisable).
+
+**Unlock policy** `YOUPI_UNLOCK_POLICY`: `observed` (default, your choice) unlocks when YOUPI sees a matching UPI credit alert and the backend re-confirms order id + amount with YOUPI. YOUPI's docs warn alerts (SMS/email) could be spoofed – so `reconciled` (unlock only after statement import) is the safe setting if files are valuable. Limits: ~20 attempts/day per receiving account, one payer at a time per VPA, INR only. Wallpapers use brand characters/logos – check IP risk before selling.
+
+## 7. Database
+SQLite via `src/migrations/001_init.sql`, applied automatically on start or `npm run migrate`. Tables: users, email_otps, sessions, products, product_items, wallpapers, coupons, orders, order_items, payments, webhook_events, entitlements, audit_log. Money in paise. Back up `data/` (e.g. `sqlite3 db ".backup file"`). For multi-server scale, move to Postgres.
+
+## 8. Tests
+`npm install && npm test` → 36/36 backend tests (signup, OTP correct/wrong/expired/resend/limits, Google flow incl. state/nonce/existing user, login/logout/session persistence, pack+bundle purchase, success/failed/cancelled/pending, duplicate prevention, unlock only after confirmed payment, history isolation, downloads, webhook signature/replay). `node e2e/smoke.mjs` – headless Chrome through the real UI (needs `npm i`, Chrome at /usr/bin/google-chrome). Resend/YOUPI/Google are local stand-ins in tests only; **live calls with real credentials were not possible in the build sandbox** – do a real test after setup.
+
+## 9. Deploy
+1. Copy the 4 pack ZIPs into `private/packs/` (names in `src/services/catalog.js`).
+2. `npm ci --omit=dev`, create `.env`, `npm start` (use pm2/systemd/Docker) behind nginx/Caddy with HTTPS; `TRUST_PROXY=1`.
+3. Persistent disk for `data/`. Open `/api/health` to verify.
+4. Admin: `npm run admin -- orders | revoke <orderId> | disable <email>`.
+
+Contact form and newsletter are still preview-only.

@@ -1,0 +1,27 @@
+{
+  "name": "inkdrift-shop",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Inkdrift storefront with Google login, email OTP signup and YOUPI UPI payments",
+  "engines": {
+    "node": ">=22.5"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env src/server.js",
+    "dev": "node --watch --env-file-if-exists=.env src/server.js",
+    "migrate": "node --env-file-if-exists=.env src/migrate.js",
+    "admin": "node --env-file-if-exists=.env src/admin.js",
+    "test": "node --test --test-concurrency=1 --test-timeout=30000 test/*.test.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^13.1.1",
+    "cookie-parser": "^1.4.7",
+    "express": "^4.22.3",
+    "express-rate-limit": "^7.5.1",
+    "helmet": "^7.2.0"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.65.0"
+  }
+}
