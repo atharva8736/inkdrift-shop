@@ -7,8 +7,12 @@ import path from 'node:path';
 import { MIGRATIONS } from './migrations/index.js';
 
 export function openDb({ url, authToken }) {
-  if (url.startsWith('file:')) fs.mkdirSync(path.dirname(path.resolve(url.slice(5))), { recursive: true });
-  const client = createClient({ url, authToken: authToken || undefined });
+  if (String(url).startsWith('file:')) fs.mkdirSync(path.dirname(path.resolve(url.slice(5))), { recursive: true });
+  // Serverless hosts reject libsql:// WebSocket handshakes ("HTTP status 400"), so talk to Turso over plain HTTPS.
+  url = String(url).trim();
+  if (/^(libsql|wss?):\/\//i.test(url)) url = url.replace(/^(libsql|wss?):/i, 'https:');
+  const token = authToken ? String(authToken).trim() : undefined;
+  const client = createClient({ url, authToken: token || undefined });
   const als = new AsyncLocalStorage();      // statements inside db.transaction() run on that transaction
   const exec = (sql, args) => (als.getStore() ?? client).execute({ sql, args: args.map((v) => (v === undefined ? null : v)) });
   const plain = (rs) => rs.rows.map((row) => Object.fromEntries(rs.columns.map((c, i) => [c, row[i]])));
