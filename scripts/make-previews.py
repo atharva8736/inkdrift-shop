@@ -58,7 +58,10 @@ def watermark(im):
     bd = ImageDraw.Draw(band)
     y0 = h // 2 - band_h // 2
     bd.rectangle([0, y0, w, y0 + band_h], fill=(5, 6, 9, 120))
-    f = font(max(12, band_h // 3))
+    size_f = max(12, band_h // 3)
+    f = font(size_f)
+    while bd.textlength(BAND, font=f) > w * 0.92 and size_f > 8:      # narrow (phone) previews: shrink the notice to fit
+        size_f -= 1; f = font(size_f)
     tw = bd.textlength(BAND, font=f)
     bd.text(((w - tw) / 2, y0 + band_h // 2 - f.size * 0.62), BAND, font=f, fill=(255, 255, 255, 235))
     base = Image.alpha_composite(base, band)
@@ -81,5 +84,22 @@ def main():
         print('wrote', name, out.size)
 
 
+def device_previews():
+    """Watermarked previews at each device's own aspect ratio: public/img/v/<wallpaper>-<device>.jpg"""
+    VAR = os.path.join(ROOT, 'private', 'variants')
+    out_dir = os.path.join(OUT, 'v')
+    os.makedirs(out_dir, exist_ok=True)
+    n = 0
+    for path in sorted(glob.glob(os.path.join(VAR, '*', '*.jpg'))):
+        wid, dev = os.path.basename(os.path.dirname(path)), os.path.splitext(os.path.basename(path))[0]
+        im = Image.open(path).convert('RGB')
+        w = 440 if im.height > im.width else 1100
+        im = im.resize((w, round(im.height * w / im.width)), Image.LANCZOS)
+        watermark(im).save(os.path.join(out_dir, f'{wid}-{dev}.jpg'), 'JPEG', quality=68, optimize=True, progressive=True)
+        n += 1
+    print('wrote', n, 'device previews')
+
+
 if __name__ == '__main__':
     main()
+    device_previews()

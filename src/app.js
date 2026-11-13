@@ -11,7 +11,8 @@ import { createGoogleService } from './services/google.js';
 import { createEmailService } from './services/email.js';
 import { createYoupiClient } from './services/youpi.js';
 import { createOrderService } from './services/orders.js';
-import { listCatalog, ownedProductIds } from './services/catalog.js';
+import { listCatalog, ownedProductIds, accessibleVariant, loadCoverage, ownedProducts, DEVICES, VARIANT_DIR } from './services/catalog.js';
+import { writeZip } from './lib/zip.js';
 import { HttpError, wrap, normEmail } from './lib/http.js';
 import { hmacHex, safeEqual } from './lib/crypto.js';
 import { audit } from './db.js';
@@ -82,7 +83,7 @@ export function createApp({ db, cfg, emailTransport, youpiClient, storage: stora
   // ---- Public ----
   app.get('/api/health', (req, res) => res.json({ ok: true }));
   app.get('/api/config', (req, res) => res.json({ googleEnabled: google.enabled(), currency: 'INR', otpLength: 6 }));
-  app.get('/api/catalog', wrap(async (req, res) => res.json({ currency: 'INR', products: await listCatalog(db), owned: req.user ? await ownedProductIds(db, req.user.id) : [] })));
+  app.get('/api/catalog', wrap(async (req, res) => res.json({ currency: 'INR', ...(await listCatalog(db)), owned: req.user ? await ownedProductIds(db, req.user.id) : [] })));
   app.get('/api/me', (req, res) => res.json(me(req)));
 
   // ---- Email + password with OTP ----
@@ -135,33 +136,51 @@ export function createApp({ db, cfg, emailTransport, youpiClient, storage: stora
   }));
 
   // ---- Purchased content ----
-  app.get('/api/library', requireAuth, wrap(async (req, res) => res.json({ packs: await orders.library(req.user.id) })));
-  // Clean (un-watermarked) previews: only for people who bought the pack. The public /img files are watermarked.
-  const CLEAN_DIR = fileURLToPath(new URL('../private/preview-src/', import.meta.url));
-  app.get('/api/preview/:packId/:k', requireAuth, wrap(async (req, res) => {
-    const k = Number(req.params.k);
-    if (!Number.isInteger(k) || k < 1 || k > 5) throw new HttpError(404, 'NOT_FOUND', 'Not found.');
-    const row = await db.prepare(`SELECT w.preview_desktop, w.preview_phone FROM entitlements e
-      JOIN wallpapers w ON w.pack_id=e.product_id AND w.position=?
-      WHERE e.user_id=? AND e.product_id=? AND e.revoked_at IS NULL`).get(k, req.user.id, req.params.packId);
-    if (!row) throw new HttpError(403, 'NOT_PURCHASED', 'You have not purchased this pack.');
-    const rel = req.query.m === 'phone' ? row.preview_phone : row.preview_desktop;
-    const file = path.join(CLEAN_DIR, path.basename(rel));
-    if (!fs.existsSync(file)) throw new HttpError(404, 'FILE_MISSING', 'Preview not available.');
-    res.set({ 'Content-Type': 'image/jpeg', 'Cache-Control': 'private, no-store' });
+  app.get('/api/library', requireAuth, wrap(async (req, res) => res.json(await orders.library(req.user.id))));
+
+  const VAR_DIR = fileURLToPath(VARIANT_DIR);
+  const fileFor = (v) => path.join(VAR_DIR, path.basename(path.dirname(v.file)), path.basename(v.file));
+  const slug = (t) => String(t).replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '');
+  const niceName = (v) => `Inkdrift_${slug(v.title)}_${DEVICES[v.device].label}_${v.width}x${v.height}.jpg`;
+  const sendJpeg = (res, v, disposition) => {
+    const file = fileFor(v);
+    if (!fs.existsSync(file)) throw new HttpError(404, 'FILE_MISSING', 'The file is not available yet. Contact support.');
+    res.set({ 'Content-Type': 'image/jpeg', 'Content-Length': String(fs.statSync(file).size), 'Cache-Control': 'private, no-store',
+      'Content-Disposition': `${disposition}; filename="${niceName(v)}"` });
     fs.createReadStream(file).pipe(res);
+  };
+  // The exact file for one wallpaper on one device. Only for people who bought a product that includes it.
+  app.get('/api/file/:wallpaperId/:device', requireAuth, wrap(async (req, res) => {
+    if (!DEVICES[req.params.device]) throw new HttpError(404, 'NOT_FOUND', 'Not found.');
+    const v = await accessibleVariant(db, req.user.id, req.params.wallpaperId, req.params.device);
+    if (!v) throw new HttpError(403, 'NOT_PURCHASED', 'You have not purchased this wallpaper for this device.');
+    await audit(db, req.user.id, 'download', `${v.wallpaper_id}/${v.device}`);
+    sendJpeg(res, v, 'attachment');
   }));
-  app.get('/api/download/:packId', requireAuth, wrap(async (req, res) => {
-    const row = await db.prepare(`SELECT p.file_name FROM entitlements e JOIN products p ON p.id=e.product_id
-      WHERE e.user_id=? AND e.product_id=? AND e.revoked_at IS NULL AND p.type='pack'`).get(req.user.id, req.params.packId);
-    if (!row?.file_name) throw new HttpError(403, 'NOT_PURCHASED', 'You have not purchased this pack.');
-    const name = path.basename(row.file_name);
-    const f = await storage.open(name);
-    if (!f) throw new HttpError(404, 'FILE_MISSING', 'The file is not available yet. Contact support.');
-    await audit(db, req.user.id, 'download', req.params.packId);
-    res.set({ 'Content-Type': 'application/zip', 'Content-Disposition': `attachment; filename="${name}"`, 'Cache-Control': 'private, no-store', ...(f.size ? { 'Content-Length': String(f.size) } : {}) });
-    f.stream.on('error', (e) => { console.error('[download]', e.message); res.destroy(e); });
-    f.stream.pipe(res);
+  // Clean preview (same file, shown inline) for owners. Everyone else only sees the watermarked /img/v previews.
+  app.get('/api/preview/:wallpaperId/:device', requireAuth, wrap(async (req, res) => {
+    if (!DEVICES[req.params.device]) throw new HttpError(404, 'NOT_FOUND', 'Not found.');
+    const v = await accessibleVariant(db, req.user.id, req.params.wallpaperId, req.params.device);
+    if (!v) throw new HttpError(403, 'NOT_PURCHASED', 'You have not purchased this wallpaper for this device.');
+    sendJpeg(res, v, 'inline');
+  }));
+  // A whole purchase: one file as a JPG, several files as a ZIP.
+  app.get('/api/download/:productId', requireAuth, wrap(async (req, res) => {
+    const owned = (await ownedProducts(db, req.user.id)).find((p) => p.id === req.params.productId);
+    if (!owned) throw new HttpError(403, 'NOT_PURCHASED', 'You have not purchased this item.');
+    const keys = [...(await loadCoverage(db))(owned)];
+    if (!keys.length) throw new HttpError(404, 'FILE_MISSING', 'The files are not available yet. Contact support.');
+    const rows = (await db.prepare('SELECT v.*, w.title, w.pack_id, w.position FROM variants v JOIN wallpapers w ON w.id=v.wallpaper_id').all())
+      .filter((v) => keys.includes(`${v.wallpaper_id}|${v.device}`)).sort((a, b) => a.pack_id.localeCompare(b.pack_id) || a.position - b.position || a.device.localeCompare(b.device));
+    await audit(db, req.user.id, 'download', owned.id);
+    if (rows.length === 1) return sendJpeg(res, rows[0], 'attachment');
+    const multiDevice = new Set(rows.map((r) => r.device)).size > 1;
+    const zipName = `Inkdrift_${slug(owned.name)}.zip`;
+    res.set({ 'Content-Type': 'application/zip', 'Content-Disposition': `attachment; filename="${zipName}"`, 'Cache-Control': 'private, no-store' });
+    await writeZip(res, rows.map((v) => ({
+      name: multiDevice ? `${slug(v.title)}/${DEVICES[v.device].label}_${v.width}x${v.height}.jpg` : niceName(v).replace(/^Inkdrift_/, ''),
+      read: async () => fs.promises.readFile(fileFor(v)),
+    })));
   }));
 
   app.use('/api', (req, res, next) => next(new HttpError(404, 'NOT_FOUND', 'Not found.')));

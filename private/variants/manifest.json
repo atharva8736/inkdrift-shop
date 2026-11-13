@@ -1,0 +1,1522 @@
+[
+ {
+  "wallpaper": "late-nights-1",
+  "device": "iphone",
+  "width": 1290,
+  "height": 2796,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   636.0,
+   0.0,
+   434.15,
+   941.0
+  ],
+  "upscale": 2.97,
+  "file": "late-nights-1/iphone.jpg",
+  "bytes": 555154
+ },
+ {
+  "wallpaper": "late-nights-1",
+  "device": "android",
+  "width": 1440,
+  "height": 3200,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   716.0,
+   0.0,
+   423.45,
+   941.0
+  ],
+  "upscale": 3.4,
+  "file": "late-nights-1/android.jpg",
+  "bytes": 638870
+ },
+ {
+  "wallpaper": "late-nights-1",
+  "device": "windows",
+  "width": 3840,
+  "height": 2160,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   0.0,
+   0.0,
+   1672.0,
+   940.5
+  ],
+  "upscale": 2.3,
+  "file": "late-nights-1/windows.jpg",
+  "bytes": 1472835
+ },
+ {
+  "wallpaper": "late-nights-1",
+  "device": "mac",
+  "width": 3024,
+  "height": 1964,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   114.0,
+   0.0,
+   1448.87,
+   941.0
+  ],
+  "upscale": 2.09,
+  "file": "late-nights-1/mac.jpg",
+  "bytes": 1134960
+ },
+ {
+  "wallpaper": "late-nights-2",
+  "device": "iphone",
+  "width": 1290,
+  "height": 2796,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   262.0,
+   0.0,
+   434.15,
+   941.0
+  ],
+  "upscale": 2.97,
+  "file": "late-nights-2/iphone.jpg",
+  "bytes": 702324
+ },
+ {
+  "wallpaper": "late-nights-2",
+  "device": "android",
+  "width": 1440,
+  "height": 3200,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   258.0,
+   0.0,
+   423.45,
+   941.0
+  ],
+  "upscale": 3.4,
+  "file": "late-nights-2/android.jpg",
+  "bytes": 813934
+ },
+ {
+  "wallpaper": "late-nights-2",
+  "device": "windows",
+  "width": 3840,
+  "height": 2160,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   0.0,
+   0.5,
+   1672.0,
+   940.5
+  ],
+  "upscale": 2.3,
+  "file": "late-nights-2/windows.jpg",
+  "bytes": 1740118
+ },
+ {
+  "wallpaper": "late-nights-2",
+  "device": "mac",
+  "width": 3024,
+  "height": 1964,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   106.0,
+   0.0,
+   1448.87,
+   941.0
+  ],
+  "upscale": 2.09,
+  "file": "late-nights-2/mac.jpg",
+  "bytes": 1356487
+ },
+ {
+  "wallpaper": "late-nights-3",
+  "device": "iphone",
+  "width": 1290,
+  "height": 2796,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   318.0,
+   0.0,
+   434.15,
+   941.0
+  ],
+  "upscale": 2.97,
+  "file": "late-nights-3/iphone.jpg",
+  "bytes": 655391
+ },
+ {
+  "wallpaper": "late-nights-3",
+  "device": "android",
+  "width": 1440,
+  "height": 3200,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   320.0,
+   0.0,
+   423.45,
+   941.0
+  ],
+  "upscale": 3.4,
+  "file": "late-nights-3/android.jpg",
+  "bytes": 756301
+ },
+ {
+  "wallpaper": "late-nights-3",
+  "device": "windows",
+  "width": 3840,
+  "height": 2160,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   0.0,
+   0.5,
+   1672.0,
+   940.5
+  ],
+  "upscale": 2.3,
+  "file": "late-nights-3/windows.jpg",
+  "bytes": 1719278
+ },
+ {
+  "wallpaper": "late-nights-3",
+  "device": "mac",
+  "width": 3024,
+  "height": 1964,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   110.0,
+   0.0,
+   1448.87,
+   941.0
+  ],
+  "upscale": 2.09,
+  "file": "late-nights-3/mac.jpg",
+  "bytes": 1327283
+ },
+ {
+  "wallpaper": "late-nights-4",
+  "device": "iphone",
+  "width": 1290,
+  "height": 2796,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   438.0,
+   0.0,
+   434.15,
+   941.0
+  ],
+  "upscale": 2.97,
+  "file": "late-nights-4/iphone.jpg",
+  "bytes": 650165
+ },
+ {
+  "wallpaper": "late-nights-4",
+  "device": "android",
+  "width": 1440,
+  "height": 3200,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   635.0,
+   0.0,
+   423.45,
+   941.0
+  ],
+  "upscale": 3.4,
+  "file": "late-nights-4/android.jpg",
+  "bytes": 757359
+ },
+ {
+  "wallpaper": "late-nights-4",
+  "device": "windows",
+  "width": 3840,
+  "height": 2160,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   0.0,
+   0.0,
+   1672.0,
+   940.5
+  ],
+  "upscale": 2.3,
+  "file": "late-nights-4/windows.jpg",
+  "bytes": 1685496
+ },
+ {
+  "wallpaper": "late-nights-4",
+  "device": "mac",
+  "width": 3024,
+  "height": 1964,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   115.0,
+   0.0,
+   1448.87,
+   941.0
+  ],
+  "upscale": 2.09,
+  "file": "late-nights-4/mac.jpg",
+  "bytes": 1305634
+ },
+ {
+  "wallpaper": "late-nights-5",
+  "device": "iphone",
+  "width": 1290,
+  "height": 2796,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   503.0,
+   0.0,
+   434.15,
+   941.0
+  ],
+  "upscale": 2.97,
+  "file": "late-nights-5/iphone.jpg",
+  "bytes": 681520
+ },
+ {
+  "wallpaper": "late-nights-5",
+  "device": "android",
+  "width": 1440,
+  "height": 3200,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   513.0,
+   0.0,
+   423.45,
+   941.0
+  ],
+  "upscale": 3.4,
+  "file": "late-nights-5/android.jpg",
+  "bytes": 786638
+ },
+ {
+  "wallpaper": "late-nights-5",
+  "device": "windows",
+  "width": 3840,
+  "height": 2160,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   0.0,
+   0.0,
+   1672.0,
+   940.5
+  ],
+  "upscale": 2.3,
+  "file": "late-nights-5/windows.jpg",
+  "bytes": 1729135
+ },
+ {
+  "wallpaper": "late-nights-5",
+  "device": "mac",
+  "width": 3024,
+  "height": 1964,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   118.0,
+   0.0,
+   1448.87,
+   941.0
+  ],
+  "upscale": 2.09,
+  "file": "late-nights-5/mac.jpg",
+  "bytes": 1330908
+ },
+ {
+  "wallpaper": "machines-1",
+  "device": "iphone",
+  "width": 1290,
+  "height": 2796,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   561.0,
+   0.0,
+   434.15,
+   941.0
+  ],
+  "upscale": 2.97,
+  "file": "machines-1/iphone.jpg",
+  "bytes": 813556
+ },
+ {
+  "wallpaper": "machines-1",
+  "device": "android",
+  "width": 1440,
+  "height": 3200,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   572.0,
+   0.0,
+   423.45,
+   941.0
+  ],
+  "upscale": 3.4,
+  "file": "machines-1/android.jpg",
+  "bytes": 940039
+ },
+ {
+  "wallpaper": "machines-1",
+  "device": "windows",
+  "width": 3840,
+  "height": 2160,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   0.0,
+   0.0,
+   1672.0,
+   940.5
+  ],
+  "upscale": 2.3,
+  "file": "machines-1/windows.jpg",
+  "bytes": 1984465
+ },
+ {
+  "wallpaper": "machines-1",
+  "device": "mac",
+  "width": 3024,
+  "height": 1964,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   114.0,
+   0.0,
+   1448.87,
+   941.0
+  ],
+  "upscale": 2.09,
+  "file": "machines-1/mac.jpg",
+  "bytes": 1559112
+ },
+ {
+  "wallpaper": "machines-2",
+  "device": "iphone",
+  "width": 1290,
+  "height": 2796,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   637.0,
+   0.0,
+   434.15,
+   941.0
+  ],
+  "upscale": 2.97,
+  "file": "machines-2/iphone.jpg",
+  "bytes": 716912
+ },
+ {
+  "wallpaper": "machines-2",
+  "device": "android",
+  "width": 1440,
+  "height": 3200,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   628.0,
+   0.0,
+   423.45,
+   941.0
+  ],
+  "upscale": 3.4,
+  "file": "machines-2/android.jpg",
+  "bytes": 829937
+ },
+ {
+  "wallpaper": "machines-2",
+  "device": "windows",
+  "width": 3840,
+  "height": 2160,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   0.0,
+   0.0,
+   1672.0,
+   940.5
+  ],
+  "upscale": 2.3,
+  "file": "machines-2/windows.jpg",
+  "bytes": 2036495
+ },
+ {
+  "wallpaper": "machines-2",
+  "device": "mac",
+  "width": 3024,
+  "height": 1964,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   116.0,
+   0.0,
+   1448.87,
+   941.0
+  ],
+  "upscale": 2.09,
+  "file": "machines-2/mac.jpg",
+  "bytes": 1565178
+ },
+ {
+  "wallpaper": "machines-3",
+  "device": "iphone",
+  "width": 1290,
+  "height": 2796,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   627.0,
+   0.0,
+   434.15,
+   941.0
+  ],
+  "upscale": 2.97,
+  "file": "machines-3/iphone.jpg",
+  "bytes": 897613
+ },
+ {
+  "wallpaper": "machines-3",
+  "device": "android",
+  "width": 1440,
+  "height": 3200,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   637.0,
+   0.0,
+   423.45,
+   941.0
+  ],
+  "upscale": 3.4,
+  "file": "machines-3/android.jpg",
+  "bytes": 1036972
+ },
+ {
+  "wallpaper": "machines-3",
+  "device": "windows",
+  "width": 3840,
+  "height": 2160,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   0.0,
+   0.0,
+   1672.0,
+   940.5
+  ],
+  "upscale": 2.3,
+  "file": "machines-3/windows.jpg",
+  "bytes": 2158669
+ },
+ {
+  "wallpaper": "machines-3",
+  "device": "mac",
+  "width": 3024,
+  "height": 1964,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   111.0,
+   0.0,
+   1448.87,
+   941.0
+  ],
+  "upscale": 2.09,
+  "file": "machines-3/mac.jpg",
+  "bytes": 1698371
+ },
+ {
+  "wallpaper": "machines-4",
+  "device": "iphone",
+  "width": 1290,
+  "height": 2796,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   739.0,
+   0.0,
+   434.15,
+   941.0
+  ],
+  "upscale": 2.97,
+  "file": "machines-4/iphone.jpg",
+  "bytes": 749637
+ },
+ {
+  "wallpaper": "machines-4",
+  "device": "android",
+  "width": 1440,
+  "height": 3200,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   739.0,
+   0.0,
+   423.45,
+   941.0
+  ],
+  "upscale": 3.4,
+  "file": "machines-4/android.jpg",
+  "bytes": 863487
+ },
+ {
+  "wallpaper": "machines-4",
+  "device": "windows",
+  "width": 3840,
+  "height": 2160,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   0.0,
+   0.0,
+   1672.0,
+   940.5
+  ],
+  "upscale": 2.3,
+  "file": "machines-4/windows.jpg",
+  "bytes": 1822716
+ },
+ {
+  "wallpaper": "machines-4",
+  "device": "mac",
+  "width": 3024,
+  "height": 1964,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   109.0,
+   0.0,
+   1448.87,
+   941.0
+  ],
+  "upscale": 2.09,
+  "file": "machines-4/mac.jpg",
+  "bytes": 1435571
+ },
+ {
+  "wallpaper": "machines-5",
+  "device": "iphone",
+  "width": 1290,
+  "height": 2796,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   97.0,
+   0.0,
+   434.15,
+   941.0
+  ],
+  "upscale": 2.97,
+  "file": "machines-5/iphone.jpg",
+  "bytes": 848658
+ },
+ {
+  "wallpaper": "machines-5",
+  "device": "android",
+  "width": 1440,
+  "height": 3200,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   104.0,
+   0.0,
+   423.45,
+   941.0
+  ],
+  "upscale": 3.4,
+  "file": "machines-5/android.jpg",
+  "bytes": 979693
+ },
+ {
+  "wallpaper": "machines-5",
+  "device": "windows",
+  "width": 3840,
+  "height": 2160,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   0.0,
+   0.5,
+   1672.0,
+   940.5
+  ],
+  "upscale": 2.3,
+  "file": "machines-5/windows.jpg",
+  "bytes": 2033261
+ },
+ {
+  "wallpaper": "machines-5",
+  "device": "mac",
+  "width": 3024,
+  "height": 1964,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   97.0,
+   0.0,
+   1448.87,
+   941.0
+  ],
+  "upscale": 2.09,
+  "file": "machines-5/mac.jpg",
+  "bytes": 1578961
+ },
+ {
+  "wallpaper": "old-money-1",
+  "device": "iphone",
+  "width": 1290,
+  "height": 2796,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   609.0,
+   0.0,
+   434.15,
+   941.0
+  ],
+  "upscale": 2.97,
+  "file": "old-money-1/iphone.jpg",
+  "bytes": 646019
+ },
+ {
+  "wallpaper": "old-money-1",
+  "device": "android",
+  "width": 1440,
+  "height": 3200,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   621.0,
+   0.0,
+   423.45,
+   941.0
+  ],
+  "upscale": 3.4,
+  "file": "old-money-1/android.jpg",
+  "bytes": 746770
+ },
+ {
+  "wallpaper": "old-money-1",
+  "device": "windows",
+  "width": 3840,
+  "height": 2160,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   0.0,
+   0.5,
+   1672.0,
+   940.5
+  ],
+  "upscale": 2.3,
+  "file": "old-money-1/windows.jpg",
+  "bytes": 1506584
+ },
+ {
+  "wallpaper": "old-money-1",
+  "device": "mac",
+  "width": 3024,
+  "height": 1964,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   112.0,
+   0.0,
+   1448.87,
+   941.0
+  ],
+  "upscale": 2.09,
+  "file": "old-money-1/mac.jpg",
+  "bytes": 1164223
+ },
+ {
+  "wallpaper": "old-money-2",
+  "device": "iphone",
+  "width": 1290,
+  "height": 2796,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   689.0,
+   0.0,
+   434.15,
+   941.0
+  ],
+  "upscale": 2.97,
+  "file": "old-money-2/iphone.jpg",
+  "bytes": 769496
+ },
+ {
+  "wallpaper": "old-money-2",
+  "device": "android",
+  "width": 1440,
+  "height": 3200,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   700.0,
+   0.0,
+   423.45,
+   941.0
+  ],
+  "upscale": 3.4,
+  "file": "old-money-2/android.jpg",
+  "bytes": 889362
+ },
+ {
+  "wallpaper": "old-money-2",
+  "device": "windows",
+  "width": 3840,
+  "height": 2160,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   0.0,
+   0.5,
+   1672.0,
+   940.5
+  ],
+  "upscale": 2.3,
+  "file": "old-money-2/windows.jpg",
+  "bytes": 1941552
+ },
+ {
+  "wallpaper": "old-money-2",
+  "device": "mac",
+  "width": 3024,
+  "height": 1964,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   103.0,
+   0.0,
+   1448.87,
+   941.0
+  ],
+  "upscale": 2.09,
+  "file": "old-money-2/mac.jpg",
+  "bytes": 1502692
+ },
+ {
+  "wallpaper": "old-money-3",
+  "device": "iphone",
+  "width": 1290,
+  "height": 2796,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   544.0,
+   0.0,
+   434.15,
+   941.0
+  ],
+  "upscale": 2.97,
+  "file": "old-money-3/iphone.jpg",
+  "bytes": 652218
+ },
+ {
+  "wallpaper": "old-money-3",
+  "device": "android",
+  "width": 1440,
+  "height": 3200,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   583.0,
+   0.0,
+   423.45,
+   941.0
+  ],
+  "upscale": 3.4,
+  "file": "old-money-3/android.jpg",
+  "bytes": 743705
+ },
+ {
+  "wallpaper": "old-money-3",
+  "device": "windows",
+  "width": 3840,
+  "height": 2160,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   0.0,
+   0.5,
+   1672.0,
+   940.5
+  ],
+  "upscale": 2.3,
+  "file": "old-money-3/windows.jpg",
+  "bytes": 1717881
+ },
+ {
+  "wallpaper": "old-money-3",
+  "device": "mac",
+  "width": 3024,
+  "height": 1964,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   100.0,
+   0.0,
+   1448.87,
+   941.0
+  ],
+  "upscale": 2.09,
+  "file": "old-money-3/mac.jpg",
+  "bytes": 1323926
+ },
+ {
+  "wallpaper": "old-money-4",
+  "device": "iphone",
+  "width": 1290,
+  "height": 2796,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   219.0,
+   0.0,
+   434.15,
+   941.0
+  ],
+  "upscale": 2.97,
+  "file": "old-money-4/iphone.jpg",
+  "bytes": 712574
+ },
+ {
+  "wallpaper": "old-money-4",
+  "device": "android",
+  "width": 1440,
+  "height": 3200,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   230.0,
+   0.0,
+   423.45,
+   941.0
+  ],
+  "upscale": 3.4,
+  "file": "old-money-4/android.jpg",
+  "bytes": 820611
+ },
+ {
+  "wallpaper": "old-money-4",
+  "device": "windows",
+  "width": 3840,
+  "height": 2160,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   0.0,
+   0.0,
+   1672.0,
+   940.5
+  ],
+  "upscale": 2.3,
+  "file": "old-money-4/windows.jpg",
+  "bytes": 1748450
+ },
+ {
+  "wallpaper": "old-money-4",
+  "device": "mac",
+  "width": 3024,
+  "height": 1964,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   99.0,
+   0.0,
+   1448.87,
+   941.0
+  ],
+  "upscale": 2.09,
+  "file": "old-money-4/mac.jpg",
+  "bytes": 1366228
+ },
+ {
+  "wallpaper": "old-money-5",
+  "device": "iphone",
+  "width": 1290,
+  "height": 2796,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   652.0,
+   0.0,
+   434.15,
+   941.0
+  ],
+  "upscale": 2.97,
+  "file": "old-money-5/iphone.jpg",
+  "bytes": 594980
+ },
+ {
+  "wallpaper": "old-money-5",
+  "device": "android",
+  "width": 1440,
+  "height": 3200,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   656.0,
+   0.0,
+   423.45,
+   941.0
+  ],
+  "upscale": 3.4,
+  "file": "old-money-5/android.jpg",
+  "bytes": 682015
+ },
+ {
+  "wallpaper": "old-money-5",
+  "device": "windows",
+  "width": 3840,
+  "height": 2160,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   0.0,
+   0.5,
+   1672.0,
+   940.5
+  ],
+  "upscale": 2.3,
+  "file": "old-money-5/windows.jpg",
+  "bytes": 1504537
+ },
+ {
+  "wallpaper": "old-money-5",
+  "device": "mac",
+  "width": 3024,
+  "height": 1964,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   108.0,
+   0.0,
+   1448.87,
+   941.0
+  ],
+  "upscale": 2.09,
+  "file": "old-money-5/mac.jpg",
+  "bytes": 1164263
+ },
+ {
+  "wallpaper": "time-1",
+  "device": "iphone",
+  "width": 1290,
+  "height": 2796,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   719.0,
+   0.0,
+   434.15,
+   941.0
+  ],
+  "upscale": 2.97,
+  "file": "time-1/iphone.jpg",
+  "bytes": 773875
+ },
+ {
+  "wallpaper": "time-1",
+  "device": "android",
+  "width": 1440,
+  "height": 3200,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   704.0,
+   0.0,
+   423.45,
+   941.0
+  ],
+  "upscale": 3.4,
+  "file": "time-1/android.jpg",
+  "bytes": 896812
+ },
+ {
+  "wallpaper": "time-1",
+  "device": "windows",
+  "width": 3840,
+  "height": 2160,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   0.0,
+   0.5,
+   1672.0,
+   940.5
+  ],
+  "upscale": 2.3,
+  "file": "time-1/windows.jpg",
+  "bytes": 2002744
+ },
+ {
+  "wallpaper": "time-1",
+  "device": "mac",
+  "width": 3024,
+  "height": 1964,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   114.0,
+   0.0,
+   1448.87,
+   941.0
+  ],
+  "upscale": 2.09,
+  "file": "time-1/mac.jpg",
+  "bytes": 1544599
+ },
+ {
+  "wallpaper": "time-2",
+  "device": "iphone",
+  "width": 1290,
+  "height": 2796,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   462.0,
+   0.0,
+   434.15,
+   941.0
+  ],
+  "upscale": 2.97,
+  "file": "time-2/iphone.jpg",
+  "bytes": 766002
+ },
+ {
+  "wallpaper": "time-2",
+  "device": "android",
+  "width": 1440,
+  "height": 3200,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   462.0,
+   0.0,
+   423.45,
+   941.0
+  ],
+  "upscale": 3.4,
+  "file": "time-2/android.jpg",
+  "bytes": 884215
+ },
+ {
+  "wallpaper": "time-2",
+  "device": "windows",
+  "width": 3840,
+  "height": 2160,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   0.0,
+   0.5,
+   1672.0,
+   940.5
+  ],
+  "upscale": 2.3,
+  "file": "time-2/windows.jpg",
+  "bytes": 1890395
+ },
+ {
+  "wallpaper": "time-2",
+  "device": "mac",
+  "width": 3024,
+  "height": 1964,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   113.0,
+   0.0,
+   1448.87,
+   941.0
+  ],
+  "upscale": 2.09,
+  "file": "time-2/mac.jpg",
+  "bytes": 1494384
+ },
+ {
+  "wallpaper": "time-3",
+  "device": "iphone",
+  "width": 1290,
+  "height": 2796,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   135.0,
+   0.0,
+   434.15,
+   941.0
+  ],
+  "upscale": 2.97,
+  "file": "time-3/iphone.jpg",
+  "bytes": 884652
+ },
+ {
+  "wallpaper": "time-3",
+  "device": "android",
+  "width": 1440,
+  "height": 3200,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   147.0,
+   0.0,
+   423.45,
+   941.0
+  ],
+  "upscale": 3.4,
+  "file": "time-3/android.jpg",
+  "bytes": 1024524
+ },
+ {
+  "wallpaper": "time-3",
+  "device": "windows",
+  "width": 3840,
+  "height": 2160,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   0.0,
+   0.0,
+   1672.0,
+   940.5
+  ],
+  "upscale": 2.3,
+  "file": "time-3/windows.jpg",
+  "bytes": 2271538
+ },
+ {
+  "wallpaper": "time-3",
+  "device": "mac",
+  "width": 3024,
+  "height": 1964,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   113.0,
+   0.0,
+   1448.87,
+   941.0
+  ],
+  "upscale": 2.09,
+  "file": "time-3/mac.jpg",
+  "bytes": 1745134
+ },
+ {
+  "wallpaper": "time-4",
+  "device": "iphone",
+  "width": 1290,
+  "height": 2796,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   647.0,
+   0.0,
+   434.15,
+   941.0
+  ],
+  "upscale": 2.97,
+  "file": "time-4/iphone.jpg",
+  "bytes": 790514
+ },
+ {
+  "wallpaper": "time-4",
+  "device": "android",
+  "width": 1440,
+  "height": 3200,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   648.0,
+   0.0,
+   423.45,
+   941.0
+  ],
+  "upscale": 3.4,
+  "file": "time-4/android.jpg",
+  "bytes": 910702
+ },
+ {
+  "wallpaper": "time-4",
+  "device": "windows",
+  "width": 3840,
+  "height": 2160,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   0.0,
+   0.0,
+   1672.0,
+   940.5
+  ],
+  "upscale": 2.3,
+  "file": "time-4/windows.jpg",
+  "bytes": 1900767
+ },
+ {
+  "wallpaper": "time-4",
+  "device": "mac",
+  "width": 3024,
+  "height": 1964,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   118.0,
+   0.0,
+   1448.87,
+   941.0
+  ],
+  "upscale": 2.09,
+  "file": "time-4/mac.jpg",
+  "bytes": 1463409
+ },
+ {
+  "wallpaper": "time-5",
+  "device": "iphone",
+  "width": 1290,
+  "height": 2796,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   656.0,
+   0.0,
+   434.15,
+   941.0
+  ],
+  "upscale": 2.97,
+  "file": "time-5/iphone.jpg",
+  "bytes": 703392
+ },
+ {
+  "wallpaper": "time-5",
+  "device": "android",
+  "width": 1440,
+  "height": 3200,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   657.0,
+   0.0,
+   423.45,
+   941.0
+  ],
+  "upscale": 3.4,
+  "file": "time-5/android.jpg",
+  "bytes": 811203
+ },
+ {
+  "wallpaper": "time-5",
+  "device": "windows",
+  "width": 3840,
+  "height": 2160,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   0.0,
+   0.5,
+   1672.0,
+   940.5
+  ],
+  "upscale": 2.3,
+  "file": "time-5/windows.jpg",
+  "bytes": 1645991
+ },
+ {
+  "wallpaper": "time-5",
+  "device": "mac",
+  "width": 3024,
+  "height": 1964,
+  "source": [
+   1672,
+   941
+  ],
+  "crop": [
+   109.0,
+   0.0,
+   1448.87,
+   941.0
+  ],
+  "upscale": 2.09,
+  "file": "time-5/mac.jpg",
+  "bytes": 1284531
+ }
+]

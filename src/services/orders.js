@@ -1,7 +1,7 @@
 import { uuid } from '../lib/crypto.js';
 import { HttpError } from '../lib/http.js';
 import { audit } from '../db.js';
-import { packsOf, ownedProductIds } from './catalog.js';
+import { loadCoverage, ownedProducts } from './catalog.js';
 
 const OPEN = ['created', 'pending', 'pending_verification'];
 const RECHECK = [...OPEN, 'failed', 'expired', 'cancelled'];     // late payments can still arrive after these
@@ -25,17 +25,19 @@ export function createOrderService({ db, cfg, youpi }) {
   const now = () => Date.now();
 
   async function quote(userId, rawItems, couponCode) {
-    let ids = [...new Set((Array.isArray(rawItems) ? rawItems : []).map(String))].slice(0, 12);
+    let ids = [...new Set((Array.isArray(rawItems) ? rawItems : []).map(String))].slice(0, 60);
     if (!ids.length) throw new HttpError(400, 'EMPTY_CART', 'Your cart is empty.');
-    const prods = new Map((await db.prepare("SELECT * FROM products WHERE active=1 AND type IN ('pack','bundle')").all()).map((p) => [p.id, p]));
-    for (const id of ids) if (!prods.has(id)) throw new HttpError(400, 'UNKNOWN_PRODUCT', 'One of the items is no longer available.');
-    const packIds = [...prods.values()].filter((p) => p.type === 'pack').map((p) => p.id);
-    if (ids.includes('bundle') || packIds.every((p) => ids.includes(p))) ids = ['bundle'];   // bundle always wins
-    const owned = new Set(await ownedProductIds(db, userId));
-    for (const id of ids) {
-      const need = await packsOf(db, id);
-      if (need.length && need.every((p) => owned.has(p))) throw new HttpError(409, 'ALREADY_OWNED', `You already own ${prods.get(id).name}.`);
-    }
+    const prods = new Map((await db.prepare("SELECT * FROM products WHERE active=1 AND type IN ('wallpaper','pack','bundle') AND device IS NOT NULL").all()).map((p) => [p.id, p]));
+    for (const id of ids) if (!prods.has(id)) throw new HttpError(400, 'UNKNOWN_PRODUCT', 'One of the items is not available (for example a device version that does not exist).');
+    const cov = await loadCoverage(db);
+    const covers = new Map(ids.map((id) => [id, cov(prods.get(id))]));
+    for (const id of ids) if (!covers.get(id).size) throw new HttpError(400, 'NOT_AVAILABLE', 'That version is not available for this device.');
+    const subset = (a, b) => [...a].every((x) => b.has(x));
+    // An item whose files are all inside another item in the cart is not charged twice (the bigger one wins).
+    ids = ids.filter((id) => !ids.some((o) => o !== id && subset(covers.get(id), covers.get(o)) && (covers.get(o).size > covers.get(id).size || o < id)));
+    const have = new Set();
+    for (const p of await ownedProducts(db, userId)) for (const k of cov(p)) have.add(k);
+    for (const id of ids) if (subset(covers.get(id), have)) throw new HttpError(409, 'ALREADY_OWNED', `You already own ${prods.get(id).name}.`);
     const subtotal = ids.reduce((s, id) => s + prods.get(id).price_paise, 0);
     let percent = 0, code = null;
     if (couponCode) {
@@ -75,7 +77,6 @@ export function createOrderService({ db, cfg, youpi }) {
     const t = now();
     for (const { product_id } of await db.prepare('SELECT product_id FROM order_items WHERE order_id=?').all(order.id)) {
       await ins.run(order.user_id, product_id, order.id, t);
-      for (const pack of await packsOf(db, product_id)) await ins.run(order.user_id, pack, order.id, t);
     }
     // Re-buying after a revoke restores access.
     await db.prepare('UPDATE entitlements SET revoked_at=NULL, order_id=? WHERE user_id=? AND revoked_at IS NOT NULL AND product_id IN (SELECT product_id FROM entitlements WHERE order_id=?)').run(order.id, order.user_id, order.id);
@@ -223,14 +224,22 @@ export function createOrderService({ db, cfg, youpi }) {
       return { outcome: r.status ?? r.reason };
     },
 
+    // Everything the customer may download: one row per wallpaper file, plus ZIPs for multi-file purchases.
     async library(userId) {
-      const rows = await db.prepare(`SELECT e.product_id, e.granted_at, p.name, p.tagline, p.type FROM entitlements e JOIN products p ON p.id=e.product_id
-        WHERE e.user_id=? AND e.revoked_at IS NULL AND p.type='pack' ORDER BY p.sort`).all(userId);
-      const walls = await db.prepare('SELECT id,pack_id,position,title,preview_desktop,preview_phone FROM wallpapers ORDER BY position').all();
-      return rows.map((r) => ({ productId: r.product_id, name: r.name, tagline: r.tagline, grantedAt: r.granted_at,
-        wallpapers: walls.filter((w) => w.pack_id === r.product_id).map(({ pack_id, ...w }) => ({ ...w,
-          clean_desktop: `/api/preview/${r.product_id}/${w.position}`, clean_phone: `/api/preview/${r.product_id}/${w.position}?m=phone` })),
-        downloadUrl: `/api/download/${r.product_id}` }));
+      const cov = await loadCoverage(db);
+      const owned = await ownedProducts(db, userId);
+      const vars = new Map((await db.prepare('SELECT v.*, w.title, w.pack_id, w.position FROM variants v JOIN wallpapers w ON w.id=v.wallpaper_id').all()).map((v) => [`${v.wallpaper_id}|${v.device}`, v]));
+      const files = new Map(), archives = [];
+      for (const p of owned) {
+        const keys = cov(p);
+        for (const k of keys) {
+          const v = vars.get(k);
+          const cur = files.get(k);
+          if (!cur || p.granted_at < cur.grantedAt) files.set(k, { wallpaperId: v.wallpaper_id, packId: v.pack_id, position: v.position, title: v.title, device: v.device, width: v.width, height: v.height, upscale: v.upscale, sourceWidth: v.source_w, sourceHeight: v.source_h, grantedAt: p.granted_at, url: `/api/file/${v.wallpaper_id}/${v.device}` });
+        }
+        if (keys.size > 1) archives.push({ productId: p.id, name: p.name, device: p.device, count: keys.size, grantedAt: p.granted_at, url: `/api/download/${p.id}` });
+      }
+      return { files: [...files.values()].sort((a, b) => b.grantedAt - a.grantedAt || a.packId.localeCompare(b.packId) || a.position - b.position), archives };
     },
   };
 }

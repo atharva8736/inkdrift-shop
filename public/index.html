@@ -621,6 +621,66 @@ nav.main a,nav.main button,.pill,.add,.seg button,.btn,.tabs button,.cur-sw{lett
 .tick circle{stroke:var(--bone)}
 s.was{display:none}
 @media(max-width:860px){.mega{font-size:clamp(84px,24vw,160px)}.sec{padding:84px 0}}
+
+/* ================= device selection, browse, cart, downloads ================= */
+.dgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.dcard{display:flex;flex-direction:column;gap:12px;text-align:left;padding:22px 22px 18px;border:1px solid var(--line);border-radius:var(--r2);background:var(--ink-2);transition:border-color .35s,transform .5s var(--out),background .35s;position:relative}
+.dcard:hover,.dcard:focus-visible{border-color:var(--bone-2);transform:translateY(-6px);background:var(--ink-3)}
+.dart{display:grid;place-items:center;height:150px;color:var(--bone-2);border-radius:var(--r1);background:var(--ink);border:1px solid var(--line)}
+.dart svg{width:92px;height:92px;transition:transform .6s var(--out),color .3s}
+.dcard:hover .dart svg{transform:scale(1.1) translateY(-3px);color:var(--acc)}
+.dname{font-size:30px}.dname .ital{color:var(--acc)}
+.dsub{color:var(--mut)}
+.dfoot{display:flex;justify-content:space-between;color:var(--mut);padding-top:10px;border-top:1px solid var(--line)}
+.dcard:hover .dfoot{color:var(--bone)}
+.dpick{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0 6px}
+.dp{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px 8px;border:1px solid var(--line);border-radius:var(--r1);color:var(--bone-2);font:500 11px var(--f-m);letter-spacing:.06em;text-transform:uppercase;transition:border-color .25s,background .25s,color .25s,transform .35s var(--out);position:relative}
+.dp i{display:block;width:34px;height:34px}.dp i svg{width:100%;height:100%}
+.dp:hover:not([disabled]){border-color:var(--bone-2);transform:translateY(-2px)}
+.dp.on{border-color:var(--bone);background:var(--ink-3);color:var(--bone)}
+.dp.on::after{content:"✓";position:absolute;top:4px;right:6px;font-size:11px;color:var(--acc)}
+.dp[disabled]{opacity:.45;cursor:not-allowed}.dp small{font-size:9px;color:#e0866c;text-transform:none;letter-spacing:0}
+.bundle .dp{color:#4d493f;border-color:rgba(15,14,12,.25)}.bundle .dp.on{background:rgba(15,14,12,.08);border-color:var(--ink);color:var(--ink)}
+.bundle #bdPick{max-width:420px;margin:0 0 18px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.op{display:flex;flex-direction:column;gap:2px;text-align:left;padding:12px;border:1px solid var(--line);border-radius:var(--r1);transition:border-color .25s,background .25s}
+.op b{font:600 14px var(--f-d)}.op span{font:400 11px var(--f-m);color:var(--mut);text-transform:uppercase;letter-spacing:.06em}.op em{font:400 22px var(--f-s);font-style:normal;margin-top:4px}
+.op.on{border-color:var(--bone);background:var(--ink-3)}
+.na{color:#e0866c;font:500 13px var(--f-m);text-transform:uppercase;letter-spacing:.08em}
+#lb .lbi{width:min(380px,32vw);gap:10px}
+#lb .lbi .dpick{margin:2px 0}
+#lb .lbw img{width:auto;height:auto;object-fit:contain}
+.buy .dpick{margin:4px 0 2px}
+.bfilters{display:flex;flex-wrap:wrap;gap:22px 40px;margin-top:34px;padding:18px 0;border-block:1px solid var(--line);align-items:center}
+.bgroup{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.bgroup>.mono{color:var(--mut)}
+.bchips{display:flex;gap:6px;flex-wrap:wrap}
+.bc{padding:8px 14px;border:1px solid var(--line);border-radius:var(--r1);font:500 12px var(--f-m);letter-spacing:.06em;text-transform:uppercase;color:var(--bone-2);transition:background .25s,color .25s,border-color .25s}
+.bc:hover{border-color:var(--bone-2)}.bc.on{background:var(--bone);color:var(--ink);border-color:var(--bone)}
+#bSort{background:var(--ink-2);border:1px solid var(--line);border-radius:var(--r1);padding:9px 12px;font:500 12px var(--f-m);color:var(--bone)}
+.bgrid{display:grid;gap:18px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+.bgrid.tall{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}.bgrid.mac{grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+.bcard{border:1px solid var(--line);border-radius:var(--r2);background:var(--ink-2);padding:10px;display:flex;flex-direction:column;gap:10px;transition:border-color .3s}
+.bcard:hover{border-color:var(--bone-2)}
+.bimg{overflow:hidden;border-radius:var(--r1);background:var(--ink-3);cursor:pointer}
+.bimg img{width:100%;height:auto;transition:transform 1s var(--out)}.bcard:hover .bimg img{transform:scale(1.05)}
+.bmeta{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:0 4px 4px}
+.bmeta b{display:block;font:600 16px var(--f-d)}.bmeta .mono{color:var(--mut);font-size:10px}
+.bbuy{display:flex;align-items:center;gap:10px}.bbuy .price{font-size:22px}
+.line-item img.ti{width:84px;aspect-ratio:16/9;object-fit:cover}.line-item img.ti.tall{width:48px;aspect-ratio:9/19.5}
+.line-item .t{min-width:0}
+.dsel{display:flex;align-items:center;gap:8px;margin-top:8px}.dsel .mono{color:var(--mut);font-size:10px}
+.dsel select{background:var(--ink);border:1px solid var(--line);border-radius:var(--r1);padding:5px 8px;font:500 12px var(--f-d);color:var(--bone);max-width:150px}
+.zips{display:grid;gap:10px}.zrow{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;border:1px solid var(--line);border-radius:var(--r2);padding:14px 18px;background:var(--ink-2)}
+.zrow b{display:block;font:600 16px var(--f-d)}.zrow .mono{color:var(--mut)}
+.dfiles{display:grid;gap:10px}
+.drow{display:grid;grid-template-columns:120px 1fr 1.3fr auto;gap:18px;align-items:center;border:1px solid var(--line);border-radius:var(--r2);padding:10px 16px 10px 10px;background:var(--ink-2)}
+.drow img{width:120px;aspect-ratio:16/9;object-fit:cover;border-radius:var(--r1)}.drow img.tall{width:60px;aspect-ratio:9/19.5;justify-self:center}
+.dinfo b{display:block;font:600 17px var(--f-d)}.dinfo .mono,.dmeta .mono{color:var(--mut);font-size:10px}
+.dmeta{display:flex;flex-direction:column;gap:3px;align-items:flex-start}
+.chipd{border:1px solid var(--bone-2);border-radius:var(--r1);padding:2px 8px;font:500 11px var(--f-m);text-transform:uppercase;letter-spacing:.08em}
+@media(max-width:1000px){.dgrid{grid-template-columns:repeat(2,1fr)}.drow{grid-template-columns:90px 1fr;}.drow .dmeta,.drow .btn{grid-column:1 / -1}.drow img{width:90px}}
+@media(max-width:560px){.dgrid{gap:10px}.dcard{padding:14px}.dart{height:110px}.dart svg{width:64px;height:64px}.dname{font-size:22px}.bgrid{grid-template-columns:repeat(2,1fr);gap:10px}.bgrid.wide,.bgrid.mac{grid-template-columns:1fr}.bmeta{flex-direction:column;align-items:flex-start}.bfilters{gap:14px}}
+@media(max-width:860px){#lb .lbi{width:min(92vw,440px)}#lb .cap{display:none}#lb{padding-bottom:90px}#lb .lbn{position:fixed;bottom:16px;right:16px}#lb .lbw img{max-height:58vh}.dp{padding:8px 2px 6px;font-size:10px}.dp i{width:28px;height:28px}}
 </style>
 </head>
 <body>
@@ -638,13 +698,13 @@ s.was{display:none}
 <header id="hdr"><div class="wrap in">
   <a class="logo cond" href="#home" data-go="home" aria-label="Inkdrift home">INK<span class="ital">drift</span></a>
   <nav class="main" aria-label="Main">
+    <button data-go="browse">Wallpapers</button>
     <button data-go="home" data-scroll="packs">Packs</button>
     <button data-go="home" data-scroll="preview">Preview</button>
     <button data-go="home" data-scroll="faq">FAQ</button>
     <button data-go="contact">Contact</button>
   </nav>
   <div class="tools">
-    <div class="cur-sw" id="curSw" data-c="usd" role="group" aria-label="Currency"><i></i><span data-cur="usd">$</span><span data-cur="inr">₹</span></div>
     <button class="pill" id="loginBtn" data-go="login">Log in</button>
     <button class="avatar" id="avatar" data-go="dashboard" aria-label="My account">N</button>
     <button class="pill" id="cartBtn" aria-label="Open cart">Cart <span id="cartN">0</span></button>
@@ -653,9 +713,10 @@ s.was{display:none}
 </div></header>
 <div id="mmenu">
   <button class="cond" style="--i:0" data-go="home">Home</button>
-  <button class="cond" style="--i:1" data-go="home" data-scroll="packs">Packs</button>
-  <button class="cond" style="--i:2" id="mAcct" data-go="login">Log in</button>
-  <button class="cond" style="--i:3" data-go="contact">Contact</button>
+  <button class="cond" style="--i:1" data-go="browse">Wallpapers</button>
+  <button class="cond" style="--i:2" data-go="home" data-scroll="packs">Packs</button>
+  <button class="cond" style="--i:3" id="mAcct" data-go="login">Log in</button>
+  <button class="cond" style="--i:4" data-go="contact">Contact</button>
 </div>
 
 <main id="view"></main>
@@ -669,7 +730,7 @@ s.was{display:none}
 <div id="lb"><button class="x" id="lbX" aria-label="Close">✕</button><div class="lbw"><img id="lbImg" alt="" draggable="false"></div><div class="lbi" id="lbInfo"></div><div class="cap mono" id="lbCap"></div><div class="lbn"><button id="lbP" aria-label="Previous">←</button><button id="lbN" aria-label="Next">→</button></div></div>
 <div id="modal"><div class="mbox"><button class="x" id="mX" aria-label="Close">✕</button>
   <span class="mono">Before you go</span><h3 class="cond">A little <span class="ital">off</span></h3>
-  <p>Use the code <span class="code mono">INK15</span> for 15% off your first pack.</p>
+  <p>Use the code <span class="code mono">INK15</span> for 15% off your first order.</p>
   <button class="btn" id="mApply">Apply 15% <span class="arrow">→</span></button><button class="no" id="mNo">No thanks</button></div></div>
 <div id="toasts" aria-live="polite"></div>
 <canvas id="conf"></canvas>
@@ -683,31 +744,47 @@ const PACKS=[
  {id:'machines',n:'III',num:3,name:'Machines',acc:'#e9a93c',tag:'Doors up, engines cooling, night garages.',desc:'Cars at rest after the drive. Scissor doors in the forest, a weekend case on the road and a white coupe under a porch light.',w:['Scissor Doors','Weekend Case','Scissor Doors II','Night Duffel','Garage Light']},
  {id:'late-nights',n:'IV',num:4,name:'Late Nights',acc:'#ef5a36',tag:'Taxis, bars and handwritten ambition.',desc:'Five scenes for the hours after the meeting. A yellow cab in the rain, two drinks at the bar and a signature that costs more than the pen.',w:['Millionare','Taxi Hush','Two Drinks','Black Kit','Clear Coat']}
 ];
-const P1={usd:4.99,inr:399,wasU:7,wasI:599};
-const PB={usd:12.99,inr:999,wasU:19.96,wasI:1596};
-const CODES={INK10:.10,INK15:.15,INK20:.20};
-const TITLES={home:'Home','old-money':'Old Money',time:'Time',machines:'Machines','late-nights':'Late Nights',login:'Log in',checkout:'Checkout',done:'Thank you',contact:'Contact',dashboard:'Dashboard'};
+const TITLES={home:'Home','old-money':'Old Money',time:'Time',machines:'Machines','late-nights':'Late Nights',browse:'Wallpapers',login:'Log in',checkout:'Checkout',done:'Thank you',contact:'Contact',dashboard:'Dashboard'};
 const FAQ=[
- ['What do I get?','Each pack is a ZIP with 5 wallpapers in two sizes: 3840 × 2160 for Windows, Mac and Android laptops, and 2160 × 3840 for iPhone and Android phones. 40 files per pack set of 20.'],
- ['How do I get my files?','Right after payment you land on a download page, and the same links arrive by email. No account is needed, and the files are yours to keep.'],
- ['Will they look sharp on my screen?','Yes. Every file is exported at full 4K and cleaned up with sharpening and a fine grain. The oil-paint texture keeps edges crisp on laptops and phones.'],
+ ['What do I get?','The wallpaper in the size and shape of the device you choose: iPhone 1290 × 2796, Android 1440 × 3200, Windows 3840 × 2160 or Mac 3024 × 1964. Buy one device, or all four for the same wallpaper.'],
+ ['Are these real 4K files?','No. The paintings were made at 1672 × 941 pixels. For each device we crop the picture to that screen\'s exact ratio, with no stretching, and enlarge it with high-quality resampling to the size above. Each wallpaper page shows how much it was enlarged. The oil-paint texture holds up well on screens.'],
+ ['How do I get my files?','Right after payment you land on a download page, and everything you buy stays in My downloads in your account. Single wallpapers download as a JPG, packs and all-device purchases as a ZIP.'],
+ ['What if my device is not listed?','Pick the closest one: iPhone and Android files are tall phone shapes, Windows is 16:9 and Mac is the MacBook Pro 14-inch shape. Tell us what you need on the contact page.'],
  ['Can I use them on all my devices?','Yes, on every device you own, for personal use. Please do not resell or re-upload the files.'],
- ['What if a file will not open?','Message us from the contact page. We will send a working copy or refund you.'],
- ['Will there be more volumes?','Yes. New volumes are planned. Join the list in the footer to hear first.']
+ ['What if a file will not open?','Message us from the contact page. We will send a working copy or refund you.']
 ];
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
-const st={cur:'usd',cart:[],user:null,csrf:null,cfg:{},owned:new Set(),coupon:null,next:null,route:null};
+const st={cart:[],dev:'windows',sku:new Map(),wall:new Map(),devices:[],cat:null,user:null,csrf:null,cfg:{},owned:new Set(),coupon:null,next:null,route:null};
 const el=h=>{const t=document.createElement('template');t.innerHTML=h.trim();return t.content.firstChild};
 const D=(n,k)=>`img/d_Vol${n}_0${k}.jpg`,Ph=(n,k)=>`img/p_Vol${n}_0${k}.jpg`;
 const chars=(s,b=0)=>`<span class="ch" style="--b:${b}ms">${[...s].map((c,i)=>`<span class="c" style="--i:${i}">${c===' '?'&nbsp;':c}</span>`).join('')}</span>`;
 const pack=id=>PACKS.find(p=>p.id===id);
-const money=(o,k='')=>st.cur==='usd'?'$'+(o['usd'+k]??o.usd).toFixed(2).replace(/\.00$/,'.00'):'₹'+Math.round(o['inr'+k]??o.inr).toLocaleString('en-IN');
-const priceOf=id=>id==='bundle'?PB:P1;
-const wasMoney=o=>st.cur==='usd'?'$'+o.wasU.toFixed(2):'₹'+o.wasI.toLocaleString('en-IN');
-const priceMoney=o=>st.cur==='usd'?'$'+o.usd.toFixed(2):'₹'+o.inr.toLocaleString('en-IN');
 const rm=matchMedia('(prefers-reduced-motion:reduce)').matches;
 /* Owners get the clean preview from the authenticated API; everyone else only ever gets the watermarked file. */
-const PV=(n,k,m='laptop')=>{const pk=PACKS[n-1];return pk&&st.owned.has(pk.id)?`/api/preview/${pk.id}/${k}${m==='phone'?'?m=phone':''}`:(m==='phone'?Ph(n,k):D(n,k))};
+const DEVS=['iphone','android','windows','mac'];
+const DL={iphone:'iPhone',android:'Android',windows:'Windows',mac:'Mac'};
+const DSUB={iphone:'Portrait · 1290 × 2796',android:'Portrait · 1440 × 3200',windows:'Landscape · 3840 × 2160',mac:'Landscape · 3024 × 1964'};
+const ICON={
+ iphone:'<svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="38" y="8" width="44" height="104" rx="11"/><rect x="52" y="15" width="16" height="5" rx="2.5" fill="currentColor" stroke="none"/><path d="M52 104h16"/></svg>',
+ android:'<svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="36" y="6" width="48" height="108" rx="7"/><circle cx="60" cy="16" r="2.6" fill="currentColor" stroke="none"/><path d="M52 106h16"/></svg>',
+ windows:'<svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="12" y="22" width="96" height="60" rx="4"/><path d="M48 98h24M60 82v16"/><path d="M42 40h16v13H42zM62 40h16v13H62zM42 56h16v13H42zM62 56h16v13H62z"/></svg>',
+ mac:'<svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="22" y="26" width="76" height="52" rx="4"/><path d="M12 88h96l-5 6H17z"/><path d="M52 26h16v4a2 2 0 0 1-2 2h-12a2 2 0 0 1-2-2z" fill="currentColor"/></svg>'};
+const devPick=(attr,sel,ok=()=>true)=>`<div class="dpick">${DEVS.map(d=>{const a=ok(d);return `<button type="button" class="dp ${d===sel?'on':''}" ${attr}="${d}" ${a?'':'disabled'} aria-pressed="${d===sel}"><i>${ICON[d]}</i><span>${DL[d]}</span>${a?'':'<small>Not available</small>'}</button>`}).join('')}</div>`;
+const inr=p=>'₹'+Math.round(p/100).toLocaleString('en-IN');
+const wid=(n,k)=>`${PACKS[n-1].id}-${k}`;
+const W=id=>st.wall.get(id);
+const variant=(w,d)=>{const x=W(w);return x?x.variants.find(v=>v.device===d)||null:null};
+const resTxt=v=>`${v.width} × ${v.height}`;
+const skuOf=(w,d)=>`${w}~${d}`;
+function cov(id){const p=st.sku.get(id);const s=new Set();if(!p)return s;
+  const ws=p.type==='wallpaper'?[p.base_id]:p.type==='pack'?[...st.wall.values()].filter(w=>w.pack_id===p.base_id).map(w=>w.id):[...st.wall.keys()];
+  const ds=p.device==='all'?DEVS:[p.device];ws.forEach(w=>ds.forEach(d=>{if(variant(w,d))s.add(w+'|'+d)}));return s}
+function ownedKeys(){const s=new Set();st.owned.forEach(id=>cov(id).forEach(k=>s.add(k)));return s}
+const owns=(w,d)=>ownedKeys().has(w+'|'+d);
+const ownsAll=id=>{const c=cov(id),o=ownedKeys();return c.size>0&&[...c].every(k=>o.has(k))};
+/* device-shaped preview: clean file for owners, watermarked low-res file for everyone else */
+const PVd=(w,d)=>owns(w,d)?`/api/preview/${w}/${d}`:`img/v/${w}-${d}.jpg`;
+const PV=(n,k,m='laptop')=>PVd(wid(n,k),m==='phone'?'iphone':'windows');
 
 /* ================= API ================= */
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -720,20 +797,20 @@ async function api(method,url,body,headers={}){
   if(j&&j.csrfToken)st.csrf=j.csrfToken;
   return j;
 }
-const inr=p=>'₹'+Math.round(p/100).toLocaleString('en-IN');
 function saveCart(){try{localStorage.setItem('ink_cart',JSON.stringify(st.cart))}catch(_){}}
-function loadCart(){try{const c=JSON.parse(localStorage.getItem('ink_cart')||'[]');if(Array.isArray(c))st.cart=c.filter(x=>x==='bundle'||pack(x))}catch(_){}}
+function loadCart(){try{const c=JSON.parse(localStorage.getItem('ink_cart')||'[]');if(Array.isArray(c))st.cart=c.filter(x=>typeof x==='string');const d=localStorage.getItem('ink_dev');if(DEVS.includes(d))st.dev=d}catch(_){}}
+function setDev(d){if(!DEVS.includes(d))return;st.dev=d;try{localStorage.setItem('ink_dev',d)}catch(_){}}
 function setUserUi(){
   const u=st.user;document.body.classList.toggle('has-user',!!u);
   if(u)$('#avatar').textContent=(u.name||u.email)[0].toUpperCase();
   const m=$('#mAcct');if(m){m.textContent=u?'Account':'Log in';m.dataset.go=u?'dashboard':'login'}
 }
-async function refreshOwned(){try{const c=await api('GET','/api/catalog');st.owned=new Set(c.owned);return c}catch(_){return null}}
+function setCatalog(c){st.cat=c;st.devices=c.devices;st.sku=new Map(c.products.map(p=>[p.id,p]));st.wall=new Map(c.wallpapers.map(w=>[w.id,w]));st.owned=new Set(c.owned||[])}
+async function refreshOwned(){try{const c=await api('GET','/api/catalog');setCatalog(c);return c}catch(_){return null}}
 async function loadSession(){
   try{
     const [cfg,me,cat]=await Promise.all([api('GET','/api/config'),api('GET','/api/me'),api('GET','/api/catalog')]);
-    st.cfg=cfg;st.user=me.user;st.csrf=me.csrfToken;st.owned=new Set(cat.owned);
-    cat.products.forEach(p=>{const o=p.id==='bundle'?PB:P1;o.inr=p.price_paise/100;if(p.compare_at_paise)o.wasI=p.compare_at_paise/100});
+    st.cfg=cfg;st.user=me.user;st.csrf=me.csrfToken;setCatalog(cat);
   }catch(_){}
   setUserUi();
 }
@@ -747,59 +824,82 @@ async function doLogout(){
 function toast(m){const t=el(`<div class="toast">${m}</div>`);$('#toasts').append(t);setTimeout(()=>t.remove(),3800)}
 
 /* ================= prices / cart ================= */
+/* A cart line is one product SKU: a wallpaper for one device, a wallpaper for all devices, a pack or the collection for one device. */
 function normalise(){
-  if(st.cart.includes('bundle')){st.cart=['bundle'];return}
-  if(PACKS.every(p=>st.cart.includes(p.id))){st.cart=['bundle'];toast('All 4 packs added: bundle price applied')}
+  st.cart=st.cart.filter(id=>st.sku.has(id)&&cov(id).size);
+  const c=new Map(st.cart.map(id=>[id,cov(id)])),sub=(a,b)=>[...a].every(x=>b.has(x));
+  st.cart=st.cart.filter(id=>!st.cart.some(o=>o!==id&&sub(c.get(id),c.get(o))&&(c.get(o).size>c.get(id).size||o<id)));
+  st.cart=st.cart.filter(id=>!ownsAll(id));
 }
+const CODES={INK10:10,INK15:15,INK20:20};
 function totals(){
-  let u=0,i=0;st.cart.forEach(id=>{const p=priceOf(id);u+=p.usd;i+=p.inr});
-  const pc=st.coupon?CODES[st.coupon]:0;
-  return{u,i,du:u*pc,di:i*pc,tu:u*(1-pc),ti:i*(1-pc),pc};
+  const sum=st.cart.reduce((a,id)=>a+(st.sku.get(id)?.price_paise||0),0);
+  const pc=st.coupon?CODES[st.coupon]||0:0,disc=Math.floor(sum*pc/100);
+  return{sum,disc,total:sum-disc,pc};
 }
-const tMoney=(u,i)=>st.cur==='usd'?'$'+u.toFixed(2):'₹'+Math.round(i).toLocaleString('en-IN');
 function updatePrices(){
-  $$('[data-price]').forEach(e=>e.textContent=priceMoney(priceOf(e.dataset.price)));
-  $$('[data-was]').forEach(e=>e.textContent=wasMoney(priceOf(e.dataset.was)));
-  $('#curSw').dataset.c=st.cur;
+  $$('[data-skuprice]').forEach(e=>{const p=st.sku.get(e.dataset.skuprice);e.textContent=p?inr(p.price_paise):''});
   renderCart();
   if(st.route==='checkout')renderCheckoutSide();
 }
+function skuTitle(id){const p=st.sku.get(id);if(!p)return id;
+  if(p.type==='wallpaper'){const w=W(p.base_id);return w.title}
+  if(p.type==='pack'){const k=PACKS.find(x=>x.id===p.base_id);return `Vol. ${k.n} · ${k.name}`}
+  return 'All 20 wallpapers'}
+function skuDevice(id){const p=st.sku.get(id);if(!p)return '';
+  if(p.device==='all'){const n=cov(id).size/1;return `All devices · ${n} versions`}
+  if(p.type==='wallpaper'){const v=variant(p.base_id,p.device);return `${DL[p.device]} · ${v?resTxt(v):''}`}
+  const v=[...st.wall.values()].map(w=>variant(w.id,p.device)).find(Boolean);return `${DL[p.device]} · ${v?resTxt(v):''} · ${p.type==='pack'?5:20} wallpapers`}
+function thumbOf(id){const p=st.sku.get(id);if(!p)return '';
+  const d=p.device==='all'?'windows':p.device;
+  if(p.type==='wallpaper')return PVd(p.base_id,d);
+  const w=p.type==='pack'?[...st.wall.values()].find(x=>x.pack_id===p.base_id):st.wall.get('late-nights-2');return PVd(w.id,d)}
+function lineHtml(id,i,withControls=true){
+  const p=st.sku.get(id);if(!p)return '';
+  const opts=DEVS.concat(p.type==='wallpaper'?['all']:[]).map(d=>{const ok=st.sku.has(`${p.base_id}~${d}`);return `<option value="${d}" ${d===p.device?'selected':''} ${ok?'':'disabled'}>${d==='all'?'All devices':DL[d]}${ok?'':' (not available)'}</option>`}).join('');
+  return `<div class="line-item" style="--i:${i}"><img class="ti ${p.device==='iphone'||p.device==='android'?'tall':''}" src="${esc(thumbOf(id))}" alt=""><div class="t"><b>${esc(skuTitle(id))}</b><span class="mono" style="color:var(--mut)">${esc(skuDevice(id))}</span>
+   ${withControls?`<label class="dsel"><span class="mono">Device</span><select data-chg="${esc(id)}" aria-label="Change device">${opts}</select></label>`:''}</div>
+   <div style="text-align:right"><div class="price" style="font-size:20px">${inr(p.price_paise)}</div><span class="mono" style="color:var(--mut)">Qty 1</span><br><button class="rm" data-rm="${esc(id)}">Remove</button></div></div>`}
 function add(id,src){
-  if(id!=='bundle'&&st.owned.has(id)){toast('You already own this pack');go('dashboard');return}
+  const p=st.sku.get(id);
+  if(!p){toast('This version is not available for this device');return}
+  if(ownsAll(id)){toast('You already own this');go('dashboard');return}
   if(st.cart.includes(id)){toast('Already in your cart');openDrawer();return}
-  if(id!=='bundle'&&st.cart.includes('bundle')){toast('The bundle already includes this pack');return}
-  st.cart.push(id);
-  const was=st.cart.length;normalise();
+  const before=st.cart.length;st.cart.push(id);normalise();
+  if(!st.cart.includes(id)){toast('Your cart already includes this');return}
   fly(src,id);
   const n=$('#cartN');n.classList.remove('bump');void n.offsetWidth;n.classList.add('bump');
-  if(st.cart[0]!=='bundle'||was<4)toast((id==='bundle'?'The bundle':pack(id).name)+' added to cart');
+  toast(esc(skuTitle(id))+' · '+esc(p.device==='all'?'all devices':DL[p.device])+' added to cart');
   renderCart();
   setTimeout(openDrawer,650);
 }
 function remove(id){st.cart=st.cart.filter(x=>x!==id);renderCart();if(st.route==='checkout')renderCheckoutSide()}
+/* switching device swaps the line for the matching product, so the file you receive always matches what the cart shows */
+function changeDevice(id,d){
+  const p=st.sku.get(id),n=st.sku.get(`${p.base_id}~${d}`);
+  if(!n){toast('Not available for this device');return}
+  if(st.cart.includes(n.id)){st.cart=st.cart.filter(x=>x!==id)}else st.cart=st.cart.map(x=>x===id?n.id:x);
+  normalise();renderCart();if(st.route==='checkout')renderCheckoutSide();
+}
 function fly(src,id){
   if(!src||rm)return;
   const r=src.getBoundingClientRect(),t=$('#cartBtn').getBoundingClientRect();
-  const p=id==='bundle'?PACKS[0]:pack(id);
-  const im=el(`<img id="fly" src="${D(p.num,1)}" alt="">`);
-  Object.assign(im.style,{left:r.left+'px',top:r.top+'px',width:'90px',height:'51px'});
+  const im=el(`<img id="fly" src="${esc(thumbOf(id))}" alt="">`);
+  Object.assign(im.style,{left:r.left+'px',top:r.top+'px',width:'90px',height:'51px',objectFit:'cover'});
   document.body.append(im);
   im.animate([{transform:'translate(0,0) scale(1) rotate(0)',opacity:1},{transform:`translate(${t.left-r.left}px,${t.top-r.top}px) scale(.2) rotate(18deg)`,opacity:.2}],{duration:850,easing:'cubic-bezier(.7,-.2,.3,1)'}).finished.then(()=>im.remove());
 }
 function renderCart(){
+  if(st.sku.size)normalise();
   saveCart();
-  const n=st.cart.length?(st.cart[0]==='bundle'?4:st.cart.length):0;
-  $('#cartN').textContent=n;
+  $('#cartN').textContent=st.cart.length;
   const box=$('#dItems'),foot=$('#dFoot');
   if(!st.cart.length){
-    box.innerHTML=`<div class="empty"><p class="cond" style="font-size:64px;color:var(--bone)">Empty</p><p>Nothing here yet. Pick a volume and it lands here.</p><br><button class="btn" data-go="home" data-scroll="packs">Browse packs <span class="arrow">→</span></button></div>`;foot.innerHTML='';return;
+    box.innerHTML=`<div class="empty"><p class="cond" style="font-size:64px;color:var(--bone)">Empty</p><p>Nothing here yet. Choose a device and a wallpaper and it lands here.</p><br><button class="btn" data-go="browse">Browse wallpapers <span class="arrow">→</span></button></div>`;foot.innerHTML='';return;
   }
-  box.innerHTML=st.cart.map((id,i)=>{
-    const b=id==='bundle',p=b?null:pack(id),pr=priceOf(id);
-    return `<div class="line-item" style="--i:${i}"><img src="${D(b?4:p.num,b?2:1)}" alt=""><div class="t"><b>${b?'All 4 packs':'Vol. '+p.n+' · '+p.name}</b><span class="mono" style="color:var(--mut)">${b?'20 wallpapers':'5 wallpapers'}</span></div><div style="text-align:right"><div class="price" style="font-size:20px">${priceMoney(pr)}</div><button class="rm" data-rm="${id}">Remove</button></div></div>`}).join('');
-  const t=totals(),have=st.cart.length;
-  const up=st.cart[0]!=='bundle'?`<div class="upsell">Add ${4-have} more pack${4-have>1?'s':''} for the bundle price of <b>${priceMoney(PB)}</b> and get all 20.<div class="tr"><i style="width:${have/4*100}%"></i></div></div>`:`<div class="upsell">Bundle applied. You are getting all 20 wallpapers.<div class="tr"><i style="width:100%"></i></div></div>`;
-  foot.innerHTML=`${up}<div class="sum"><div class="tot"><span>Total</span><span>${tMoney(t.tu,t.ti)}</span></div></div><button class="btn block" data-go="checkout">Checkout <span class="arrow">→</span></button>`;
+  box.innerHTML=st.cart.map((id,i)=>lineHtml(id,i)).join('');
+  const t=totals();
+  foot.innerHTML=`<div class="sum"><div class="tot"><span>Total</span><span>${inr(t.total)}</span></div></div><button class="btn block" data-go="checkout">Checkout <span class="arrow">→</span></button>`;
 }
 function openDrawer(){document.body.classList.add('drawer-on','scrim-on','lock');renderCart()}
 function closeDrawer(){document.body.classList.remove('drawer-on','scrim-on','lock')}
@@ -849,7 +949,7 @@ function footer(){return `<footer><div class="wrap">
    <div><h5 class="mono">Stay in the ink</h5><p style="max-width:360px;color:var(--bone-2)">New volumes, early access and the occasional discount. One email a month.</p>
      <form class="nl" id="nlF"><input id="nlE" type="email" placeholder="Your email" aria-label="Email" required><button>Join →</button></form></div>
    <div><h5 class="mono">Packs</h5>${PACKS.map(p=>`<button data-go="${p.id}">Vol. ${p.n} · ${p.name}</button>`).join('')}</div>
-   <div><h5 class="mono">Shop</h5><button data-go="home" data-scroll="faq">FAQ</button><button data-go="login">Log in</button><button data-go="checkout">Checkout</button><button data-go="contact">Contact</button></div>
+   <div><h5 class="mono">Shop</h5><button data-go="browse">All wallpapers</button><button data-go="home" data-scroll="faq">FAQ</button><button data-go="login">Log in</button><button data-go="checkout">Checkout</button><button data-go="contact">Contact</button></div>
    <div><h5 class="mono">Follow</h5><a href="#home" data-go="home">Instagram</a><a href="#home" data-go="home">Pinterest</a><a href="#home" data-go="home">Privacy policy</a></div>
   </div>
   <div class="pay mono"><span>Pay with UPI</span><span>GPay, PhonePe, Paytm, BHIM</span></div>
@@ -862,18 +962,18 @@ function packCard(p){
    <div class="pc-img"><img src="${D(p.num,1)}" alt="" loading="lazy"><img src="${D(p.num,2)}" alt="" loading="lazy"></div>
    <div class="pc-top mono"><span>Vol. ${p.n}</span><span>5 wallpapers</span></div>
    <h3 class="cond">${p.name}</h3><p>${p.tag}</p>
-   <div class="pc-foot"><div><s class="was" data-was="pack"></s><span class="price" data-price="pack"></span></div><button class="add" data-add="${p.id}">Add</button></div></div>`}
+   <div class="pc-foot"><div><span class="mono" style="color:var(--mut)">Pack · </span><span class="price" data-skuprice="${p.id}~windows"></span></div><button class="add" data-go="${p.id}">Choose device</button></div></div>`}
 
 const VIEWS={
 home(){return `
 <section class="hero" id="hero"><canvas id="ink"></canvas>
  <div class="wrap">
   <div>
-   <p class="eyebrow mono">Oil-texture wallpapers · 4K · Laptop + Phone</p>
+   <p class="eyebrow mono">Oil-texture wallpapers · iPhone · Android · Windows · Mac</p>
    <h1 class="mega cond" aria-label="Inkdrift">${chars('INK',200)}<span class="ital">${chars('drift',420)}</span></h1>
    <p class="lede rv in">Twenty paintings for the screens you open all day. Pick a volume or take them all.</p>
-   <div class="cta"><button class="btn" data-magnet data-add="bundle">Get all 20 · <span data-price="bundle"></span> <span class="arrow">→</span></button><button class="btn ghost" data-magnet data-go="home" data-scroll="packs">Explore packs</button></div>
-   <div class="hero-stats mono"><div><b class="cond" data-count="20">0</b><span>Wallpapers</span></div><div><b class="cond">4K</b><span>Every file</span></div><div><b class="cond" data-count="40">0</b><span>Files in total</span></div></div>
+   <div class="cta"><button class="btn" data-magnet data-go="home" data-scroll="devices">Choose your device <span class="arrow">→</span></button><button class="btn ghost" data-magnet data-go="browse">Browse wallpapers</button></div>
+   <div class="hero-stats mono"><div><b class="cond" data-count="20">0</b><span>Wallpapers</span></div><div><b class="cond" data-count="4">0</b><span>Devices</span></div><div><b class="cond" data-count="80">0</b><span>Files in total</span></div></div>
   </div>
   <div class="stage" id="stage">
    <div class="sc a" data-cursor="Open" data-lb="1-3"><img src="${D(1,3)}" alt="Cloud Rider wallpaper"></div>
@@ -884,20 +984,26 @@ home(){return `
  </div>
  <div class="scrollcue mono"><span>Scroll</span><i></i></div>
 </section>
-<div class="big-mq" aria-hidden="true"><div class="tr">${Array(2).fill(['Oil texture','4K','Laptop + phone','Instant download','Yours to keep'].map((t,i)=>`<span class="cond ${i%2?'o':''}">${t}<i></i></span>`).join('')).join('')}</div></div>
+<div class="big-mq" aria-hidden="true"><div class="tr">${Array(2).fill(['Oil texture','iPhone','Android','Windows','Mac','Yours to keep'].map((t,i)=>`<span class="cond ${i%2?'o':''}">${t}<i></i></span>`).join('')).join('')}</div></div>
+
+<section class="sec" id="devices"><div class="wrap">
+  <div class="head"><div><span class="sub mono rv">01 · Your screen</span><h2 class="h2 cond rv">Choose your <span class="ital">device</span></h2></div><p class="rv">Every wallpaper is cut to the exact shape of your screen. Pick a device and we show only what fits it.</p></div>
+  <div class="dgrid">${DEVS.map((d,i)=>`<button class="dcard rv" style="--d:${i*80}ms" data-dev="${d}" data-go="browse" data-cursor="Browse" aria-label="${DL[d]} wallpapers"><span class="dart">${ICON[d]}</span><span class="dname cond">${DL[d]} <span class="ital">wallpapers</span></span><span class="mono dsub">${DSUB[d]}</span><span class="dfoot mono"><span>20 wallpapers</span><span class="arrow">→</span></span></button>`).join('')}</div>
+</div></section>
 
 <section class="sec" id="packs"><div class="wrap">
-  <div class="head"><div><span class="sub mono rv">01 · The volumes</span><h2 class="h2 cond rv">Pick your <span class="ital">volume</span></h2></div><p class="rv">Four themed packs of five. Each wallpaper ships in a laptop size and a phone size.</p></div>
+  <div class="head"><div><span class="sub mono rv">02 · The volumes</span><h2 class="h2 cond rv">Pick your <span class="ital">volume</span></h2></div><p class="rv">Four themed packs of five. Buy a whole pack for the device you use.</p></div>
   <div class="grid4">${PACKS.map(packCard).join('')}</div>
   <div class="bundle rv" data-tilt="0">
-    <div><span class="save mono">Bundle</span><h3 class="cond">All <span class="ital">twenty</span></h3><p>Every volume, 20 wallpapers, 40 files. Lower price per wallpaper than buying the packs one by one.</p>
-     <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap"><button class="btn" data-magnet data-add="bundle">Add the bundle <span class="arrow">→</span></button><div><s class="was" style="color:rgba(255,255,255,.7)" data-was="bundle"></s><span class="price" style="font-size:38px" data-price="bundle"></span></div></div></div>
+    <div><span class="save mono">Whole collection</span><h3 class="cond">All <span class="ital">twenty</span></h3><p>All 20 wallpapers for the device you choose. Lower price per wallpaper than buying packs one by one.</p>
+     <div id="bdPick"></div>
+     <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap"><button class="btn" id="bdAdd" data-magnet>Add the collection <span class="arrow">→</span></button><span class="price" style="font-size:38px" id="bdPrice"></span></div></div>
     <div class="stack">${[[1,3],[2,5],[3,1],[4,2]].map(([a,b])=>`<img src="${D(a,b)}" alt="" loading="lazy">`).join('')}</div>
   </div>
 </div></section>
 
 <section class="sec" id="preview" style="background:var(--ink-2)"><div class="wrap">
-  <div class="head"><div><span class="sub mono rv">02 · On your screen</span><h2 class="h2 cond rv">See the <span class="ital">difference</span></h2></div><p class="rv">Drag the handle. Left is a stock desktop, right is the same desktop with Inkdrift.</p></div>
+  <div class="head"><div><span class="sub mono rv">03 · On your screen</span><h2 class="h2 cond rv">See the <span class="ital">difference</span></h2></div><p class="rv">Drag the handle. Left is a stock desktop, right is the same desktop with Inkdrift.</p></div>
   <div class="ba-wrap rv">
    <div class="ba" id="ba" data-cursor="Drag">
     <div class="lay after"><div class="wp" id="baImg" style="background-image:url(${D(1,3)})"></div>${desk()}<span class="tag r">With Inkdrift</span></div>
@@ -909,25 +1015,25 @@ home(){return `
 </div></section>
 
 <section class="hs" id="hs"><div class="hs-s">
-  <div class="wrap" style="width:min(1320px,100% - 48px)"><span class="sub mono">03 · The whole archive</span><h2 class="h2 cond">Twenty <span class="ital">paintings</span></h2></div>
+  <div class="wrap" style="width:min(1320px,100% - 48px)"><span class="sub mono">04 · The whole archive</span><h2 class="h2 cond">Twenty <span class="ital">paintings</span></h2></div>
   <div class="hs-t" id="hsT">${PACKS.flatMap(p=>p.w.map((w,k)=>`<div class="hs-c" data-cursor="Open" data-lb="${p.num}-${k+1}"><img src="${D(p.num,k+1)}" alt="${w}" loading="lazy"><span class="mono">Vol. ${p.n} · ${w}</span></div>`)).join('')}</div>
   <div class="hs-bar"><i id="hsB"></i></div>
 </div></section>
 
 <section class="sec paper" id="why"><div class="wrap">
-  <div class="head"><div><span class="sub mono">04 · What you get</span><h2 class="h2 cond">Made for <span class="ital">every</span> screen</h2></div></div>
+  <div class="head"><div><span class="sub mono">05 · What you get</span><h2 class="h2 cond">Made for <span class="ital">every</span> screen</h2></div></div>
   <div class="feat">
    <div class="rv"><b class="cond" data-count="20">0</b><h4>Wallpapers</h4><p>Four packs of five oil-texture paintings.</p></div>
-   <div class="rv" style="--d:80ms"><b class="cond">4K</b><h4>Full resolution</h4><p>3840 × 2160 for laptops and 2160 × 3840 for phones.</p></div>
-   <div class="rv" style="--d:160ms"><b class="cond" data-count="5">0</b><h4>Platforms</h4><p>Windows, Mac, Android laptops, Android phones and iPhone.</p></div>
+   <div class="rv" style="--d:80ms"><b class="cond" data-count="4">0</b><h4>Devices</h4><p>iPhone, Android, Windows and Mac, each with its own file.</p></div>
+   <div class="rv" style="--d:160ms"><b class="cond">1:1</b><h4>Exact fit</h4><p>Cropped to your screen's ratio. Never stretched or squashed.</p></div>
    <div class="rv" style="--d:240ms"><b class="cond">∞</b><h4>Yours to keep</h4><p>One payment. No subscription, no expiry.</p></div>
   </div>
-  <div class="devs mono rv">${['Windows','macOS','Android laptop','iPhone','Android phone'].map(d=>`<span class="dev">${d}</span>`).join('')}</div>
-  <div class="steps">${[['Pick','Choose a volume or the full bundle.'],['Pay','Pay with any UPI app on the secure payment screen.'],['Download','Your ZIP links open the moment payment clears.']].map(([a,b],i)=>`<div class="step rv" style="--d:${i*100}ms"><b class="cond">0${i+1}</b><h4 style="font:700 22px var(--f-d)">${a}</h4><p style="max-width:300px;opacity:.75">${b}</p></div>`).join('')}</div>
+  <div class="devs mono rv">${['iPhone','Android','Windows','Mac'].map(d=>`<span class="dev">${d}</span>`).join('')}</div>
+  <div class="steps">${[['Pick','Choose a wallpaper and your device.'],['Pay','Pay with any UPI app on the secure payment screen.'],['Download','The right file for your device unlocks the moment payment clears.']].map(([a,b],i)=>`<div class="step rv" style="--d:${i*100}ms"><b class="cond">0${i+1}</b><h4 style="font:700 22px var(--f-d)">${a}</h4><p style="max-width:300px;opacity:.75">${b}</p></div>`).join('')}</div>
 </div></section>
 
 <section class="sec" id="faq"><div class="wrap">
-  <div class="head"><div><span class="sub mono rv">05 · Before you join</span><h2 class="h2 cond rv">Quick <span class="ital">answers</span></h2></div></div>
+  <div class="head"><div><span class="sub mono rv">06 · Before you join</span><h2 class="h2 cond rv">Quick <span class="ital">answers</span></h2></div></div>
   <div class="faq rv">${FAQ.map(([q,a],i)=>`<div class="q ${i?'':'open'}"><button aria-expanded="${i?'false':'true'}">${q}<span class="pm"></span></button><div class="a"><div><p>${a}</p></div></div></div>`).join('')}</div>
 </div></section>
 ${footer()}`},
@@ -939,10 +1045,14 @@ pack(id){
   <div class="crumb mono"><button data-go="home">Home</button>/<button data-go="home" data-scroll="packs">Packs</button>/<span style="color:var(--bone)">${p.name}</span></div>
   <h1 class="cond">${chars('Vol.'+p.n+' ',0)}<span class="ital" style="color:var(--acc)">${chars(p.name,300)}</span></h1>
   <div class="ph-grid">
-   <div><p class="rv in">${p.desc}</p><div class="meta mono rv in"><span>5 wallpapers</span><span>3840 × 2160</span><span>2160 × 3840</span><span>JPG · ZIP</span></div></div>
-   <div class="buy rv in"><div class="row"><span class="mono" style="color:var(--mut)">Volume ${p.n}</span><span><s class="was" data-was="pack"></s></span></div><div class="price" data-price="pack"></div>
-    <button class="btn block" data-magnet data-add="${p.id}">Add to cart <span class="arrow">→</span></button>
-    <button class="btn ghost block" data-add="bundle">Get all 4 · <span data-price="bundle"></span></button></div>
+   <div><p class="rv in">${p.desc}</p><div class="meta mono rv in"><span>5 wallpapers</span><span>iPhone</span><span>Android</span><span>Windows</span><span>Mac</span><span>JPG · ZIP</span></div></div>
+   <div class="buy rv in"><div class="row"><span class="mono" style="color:var(--mut)">Volume ${p.n} · five wallpapers</span></div>
+    <span class="mono" style="color:var(--mut)">Choose your device</span>
+    <div id="pDev"></div>
+    <div class="row"><div class="price" id="pPrice"></div><span class="mono" id="pRes" style="color:var(--mut)"></span></div>
+    <button class="btn block" id="pAdd" data-magnet>Add Vol. ${p.n} to cart <span class="arrow">→</span></button>
+    <button class="btn ghost block" id="pAddAll">All 20 for this device</button>
+    <p class="note" style="margin:0">Want a single wallpaper? Open it below and pick one device or all four.</p></div>
   </div>
   <div class="viewer rv">
    <div class="vstage" id="vstage" data-cursor="Open">
@@ -955,6 +1065,19 @@ pack(id){
   <div class="mason">${p.w.map((w,k)=>`<figure class="rv" data-cursor="Open" data-lb="${p.num}-${k+1}" style="--d:${k*60}ms"><img src="${D(p.num,k+1)}" alt="${w}" loading="lazy"><figcaption class="mono">0${k+1} · ${w}</figcaption></figure>`).join('')}</div>
   <a class="next" href="#${nx.id}" data-go="${nx.id}" data-cursor="Next"><span class="sub mono">Next volume</span><span class="h2 cond" style="display:block">Vol.${nx.n} <span class="ital" style="color:${nx.acc}">${nx.name}</span> <span class="arrow">→</span></span></a>
 </div></section>${footer()}`},
+
+browse(){
+  return `<section class="ph"><div class="wrap">
+  <div class="crumb mono"><button data-go="home">Home</button>/<span style="color:var(--bone)">Wallpapers</span></div>
+  <h1 class="cond">${chars('Wall',0)}<span class="ital" style="color:var(--acc)">${chars('papers',300)}</span></h1>
+  <div class="bfilters">
+   <div class="bgroup"><span class="mono">Device</span><div class="bchips" id="bDev"></div></div>
+   <div class="bgroup"><span class="mono">Volume</span><div class="bchips" id="bVol"></div></div>
+   <div class="bgroup"><span class="mono">Sort</span><select id="bSort" aria-label="Sort"><option value="vol">Volume order</option><option value="az">Name A to Z</option><option value="za">Name Z to A</option></select></div>
+  </div>
+  <p class="mono" id="bCount" style="color:var(--mut);margin:22px 0 18px"></p>
+  <div class="bgrid" id="bGrid"></div>
+ </div></section>${footer()}`},
 
 login(){
   const g=`<a class="gbtn" href="/api/auth/google?next=${encodeURIComponent(st.cart.length?'/#checkout':'/#dashboard')}"><svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Continue with Google</a><div class="or mono"><span>or use your email</span></div>`;
@@ -976,9 +1099,9 @@ dashboard(){
   const u=st.user||{name:'',email:''};
   return `<section class="dash"><div class="wrap">
    <div class="dash-head"><div class="who"><div class="av">${u.avatarUrl?`<img src="${esc(u.avatarUrl)}" alt="" referrerpolicy="no-referrer">`:esc((u.name||u.email||'?')[0].toUpperCase())}</div>
-    <div><h1 class="cond" style="font-size:clamp(44px,7vw,84px)">${esc((u.name||'').split(' ')[0])}<span class="ital" style="color:var(--acc)">'s</span> wall</h1><div class="mono" style="color:var(--mut)">${esc(u.email)}</div></div></div>
+    <div><h1 class="cond" style="font-size:clamp(44px,7vw,84px)">${esc((u.name||'').split(' ')[0])}<span class="ital" style="color:var(--acc)">'s</span> account</h1><div class="mono" style="color:var(--mut)">${esc(u.email)}</div></div></div>
     <button class="btn ghost" id="logoutBtn">Log out</button></div>
-   <div class="dtabs"><button class="pill" data-dt="lib" style="background:var(--bone);color:var(--ink)">My wallpapers</button><button class="pill" data-dt="hist">Purchase history</button></div>
+   <div class="dtabs"><button class="pill" data-dt="lib" style="background:var(--bone);color:var(--ink)">My downloads</button><button class="pill" data-dt="hist">Purchase history</button></div>
    <div id="dBody"></div>
   </div></section>${footer()}`},
 
@@ -1027,6 +1150,7 @@ function initView(name){
   $$('[data-tilt]').forEach(tilt);$$('[data-magnet]').forEach(magnet);
   setupFaq();setupFooter();
   if(name==='home')initHome();
+  if(name==='browse')initBrowse();
   if(pack(name))initPack(pack(name));
   if(name==='login')initLogin();
   if(name==='checkout')initCheckout();
@@ -1053,6 +1177,10 @@ function setupFooter(){
 
 /* --- home --- */
 function initHome(){
+  (function(){const box=$('#bdPick');if(!box)return;let d=st.dev;
+    const draw=()=>{box.innerHTML=devPick('data-bdv',d,x=>st.sku.has('bundle~'+x));const k=st.sku.get('bundle~'+d);$('#bdPrice').textContent=k?inr(k.price_paise):'';$('#bdAdd').dataset.id=k?k.id:'';
+      $$('#bdPick [data-bdv]').forEach(x=>x.onclick=()=>{d=x.dataset.bdv;setDev(d);draw()})};
+    draw();$('#bdAdd').onclick=e=>{const id=e.currentTarget.dataset.id;if(id)add(id,e.currentTarget)}})();
   const stage=$('#stage'),hero=$('#hero');
   const mm=e=>{const r=stage.getBoundingClientRect();stage.style.setProperty('--mx',((e.clientX-r.left)/r.width-.5).toFixed(3));stage.style.setProperty('--my',((e.clientY-r.top)/r.height-.5).toFixed(3))};
   hero.addEventListener('pointermove',mm);
@@ -1087,6 +1215,16 @@ function inkBg(cv){
 /* --- pack page --- */
 function initPack(p){
   let i=0,mode='laptop',timer;
+  const buyBox=()=>{
+    const d=st.dev,ok=x=>st.sku.has(`${p.id}~${x}`);
+    $('#pDev').innerHTML=devPick('data-pd',d,ok);
+    const sk=st.sku.get(`${p.id}~${d}`),bk=st.sku.get(`bundle~${d}`),v=variant(wid(p.num,1),d);
+    $('#pPrice').textContent=sk?inr(sk.price_paise):'';$('#pRes').textContent=v?`${DL[d]} · ${resTxt(v)}`:'Not Available for This Device';
+    const a=$('#pAdd');a.disabled=!sk;a.dataset.id=sk?sk.id:'';a.firstChild.textContent=sk?`Add Vol. ${p.n} for ${DL[d]} `:'Not Available for This Device ';
+    const b=$('#pAddAll');b.disabled=!bk;b.dataset.id=bk?bk.id:'';b.textContent=bk?`All 20 for ${DL[d]} · ${inr(bk.price_paise)}`:'Not Available for This Device';
+    $$('#pDev [data-pd]').forEach(x=>x.onclick=()=>{setDev(x.dataset.pd);buyBox()});
+  };
+  buyBox();$('#pAdd').onclick=e=>{if(e.currentTarget.dataset.id)add(e.currentTarget.dataset.id,e.currentTarget)};$('#pAddAll').onclick=e=>{if(e.currentTarget.dataset.id)add(e.currentTarget.dataset.id,e.currentTarget)};
   const seg=$('#vSeg'),dev=$('#vdev');
   const render=()=>{
     dev.innerHTML=mode==='laptop'?`<div class="lap"><div class="scr"><img id="vImg" src="${PV(p.num,i+1)}" alt="${p.w[i]}"></div><div class="base"></div></div>`:`<div class="phn"><div class="scr"><img id="vImg" src="${PV(p.num,i+1,'phone')}" alt="${p.w[i]}"></div></div>`;
@@ -1101,6 +1239,29 @@ function initPack(p){
   $('#vPrev').onclick=e=>{e.stopPropagation();stop();step(-1)};$('#vNext').onclick=e=>{e.stopPropagation();stop();step(1)};
   $$('#vSeg button').forEach(b=>b.onclick=()=>{mode=b.dataset.m;seg.dataset.m=mode;stop();render()});
   $('#vstage').onclick=e=>{if(e.target.closest('button'))return;openLB(p.num,i+1,mode)};
+}
+
+/* --- browse --- */
+function initBrowse(){
+  const f={dev:st.bdev||'all',vol:'all',sort:'vol'};
+  const draw=()=>{
+    $('#bDev').innerHTML=['all',...DEVS].map(d=>`<button class="bc ${f.dev===d?'on':''}" data-bd="${d}">${d==='all'?'All devices':DL[d]}</button>`).join('');
+    $('#bVol').innerHTML=['all',...PACKS.map(x=>x.id)].map(v=>`<button class="bc ${f.vol===v?'on':''}" data-bv="${v}">${v==='all'?'All volumes':'Vol. '+pack(v).n+' · '+pack(v).name}</button>`).join('');
+    let list=PACKS.flatMap(pk=>pk.w.map((t,k)=>({id:wid(pk.num,k+1),title:t,pk})));
+    list=list.filter(x=>(f.vol==='all'||x.pk.id===f.vol)&&(f.dev==='all'||variant(x.id,f.dev)));
+    if(f.sort==='az')list.sort((a,b)=>a.title.localeCompare(b.title));if(f.sort==='za')list.sort((a,b)=>b.title.localeCompare(a.title));
+    $('#bCount').textContent=f.dev==='all'?`${list.length} wallpapers · every device`:`${list.length} wallpapers for ${DL[f.dev]} · ${DSUB[f.dev]}`;
+    $('#bGrid').className='bgrid '+(f.dev==='iphone'||f.dev==='android'?'tall':f.dev==='mac'?'mac':'wide');
+    $('#bGrid').innerHTML=list.length?list.map((x,i)=>{
+      const d=f.dev==='all'?'windows':f.dev,sk=st.sku.get(f.dev==='all'?`${x.id}~all`:`${x.id}~${f.dev}`),own=f.dev==='all'?DEVS.every(y=>owns(x.id,y)):owns(x.id,f.dev);
+      return `<article class="bcard rv in" style="--d:${Math.min(i,8)*40}ms"><div class="bimg" data-lbw="${x.id}" data-lbd="${d}" data-cursor="Open"><img src="${esc(PVd(x.id,d))}" alt="${esc(x.title)}" loading="lazy"></div>
+        <div class="bmeta"><div><b>${esc(x.title)}</b><span class="mono">Vol. ${esc(x.pk.n)} · ${f.dev==='all'?'4 devices':esc(resTxt(variant(x.id,f.dev)))}</span></div>
+        ${own?'<button class="add" data-go="dashboard">Owned</button>':sk?`<div class="bbuy"><span class="price">${inr(sk.price_paise)}</span><button class="add" data-add="${esc(sk.id)}">Add</button></div>`:'<span class="mono" style="color:var(--mut)">Not available</span>'}</div></article>`}).join('')
+      :'<div class="empty"><p class="cond" style="font-size:54px;color:var(--bone)">Nothing here</p><p>No wallpapers for this choice yet. Try another device.</p></div>';
+    $$('#bDev [data-bd]').forEach(b=>b.onclick=()=>{f.dev=b.dataset.bd;st.bdev=f.dev;if(f.dev!=='all')setDev(f.dev);draw()});
+    $$('#bVol [data-bv]').forEach(b=>b.onclick=()=>{f.vol=b.dataset.bv;draw()});
+  };
+  draw();$('#bSort').onchange=e=>{f.sort=e.target.value;draw()};
 }
 
 /* --- login --- */
@@ -1198,11 +1359,14 @@ function initDashboard(){
   async function lib(){
     body.innerHTML='<div class="wait"></div>';
     try{
-      const {packs}=await api('GET','/api/library');
-      if(!packs.length){body.innerHTML=`<div class="empty"><p class="cond" style="font-size:64px;color:var(--bone)">Nothing yet</p><p>Packs you buy appear here, ready to download.</p><br><button class="btn" data-go="home" data-scroll="packs">Browse packs <span class="arrow">→</span></button></div>`;return}
-      body.innerHTML=packs.map((p,i)=>`<div class="dpack rv" style="--d:${i*80}ms"><div><span class="mono" style="color:var(--mut)">Unlocked · 5 wallpapers · 4K</span><h3 class="cond">${esc(p.name)}</h3></div>
-        <a class="btn" href="${esc(p.downloadUrl)}" download>Download ZIP <span class="arrow">↓</span></a>
-        <div class="strip">${p.wallpapers.map(w=>`<img src="${esc(w.clean_desktop||w.preview_desktop)}" alt="${esc(w.title)}" loading="lazy">`).join('')}</div></div>`).join('');
+      const {files,archives}=await api('GET','/api/library');
+      if(!files.length){body.innerHTML=`<div class="empty"><p class="cond" style="font-size:64px;color:var(--bone)">Nothing yet</p><p>Wallpapers you buy appear here, ready to download.</p><br><button class="btn" data-go="browse">Browse wallpapers <span class="arrow">→</span></button></div>`;return}
+      const when=t=>new Date(t).toLocaleDateString('en-IN',{dateStyle:'medium'});
+      body.innerHTML=(archives.length?`<h3 class="cond" style="font-size:40px;margin:10px 0 14px">ZIP <span class="ital">downloads</span></h3><div class="zips">${archives.map(a=>`<div class="zrow"><div><b>${esc(a.name)}</b><span class="mono">${a.count} files · ${when(a.grantedAt)}</span></div><a class="btn" href="${esc(a.url)}" download>Download ZIP <span class="arrow">↓</span></a></div>`).join('')}</div>`:'')+
+       `<h3 class="cond" style="font-size:40px;margin:34px 0 14px">My <span class="ital">downloads</span></h3><div class="dfiles">${files.map(f=>`<div class="drow rv in"><img class="${f.device==='iphone'||f.device==='android'?'tall':''}" src="/api/preview/${esc(f.wallpaperId)}/${esc(f.device)}" alt="" loading="lazy">
+        <div class="dinfo"><b>${esc(f.title)}</b><span class="mono">Vol. ${esc((pack(f.packId)||{}).n||'')} · ${esc(pack(f.packId)?pack(f.packId).name:'')}</span></div>
+        <div class="dmeta"><span class="chipd">${esc(DL[f.device])}</span><span class="mono">${f.width} × ${f.height}</span><span class="mono" style="color:var(--mut)">Enlarged ${f.upscale}× from ${f.sourceWidth} × ${f.sourceHeight}</span><span class="mono" style="color:var(--mut)">Bought ${when(f.grantedAt)}</span></div>
+        <a class="btn" href="${esc(f.url)}" download>Download <span class="arrow">↓</span></a></div>`).join('')}</div>`;
       initView_reveal();
     }catch(e){body.innerHTML=`<p class="ferr">${esc(e.message)}</p>`}
   }
@@ -1225,23 +1389,24 @@ function initView_reveal(){$$('.rv:not(.in)').forEach(e=>e.classList.add('in'))}
 /* --- checkout --- */
 async function renderCheckoutSide(){
   const s=$('#coSide');if(!s)return;
-  if(!st.cart.length){s.innerHTML=`<div class="empty"><p>Your cart is empty.</p><br><button class="btn" data-go="home" data-scroll="packs">Browse packs <span class="arrow">→</span></button></div>`;$('#payBtn').disabled=true;$('#payAmt').textContent='';return}
+  if(!st.cart.length){s.innerHTML=`<div class="empty"><p>Your cart is empty.</p><br><button class="btn" data-go="browse">Browse wallpapers <span class="arrow">→</span></button></div>`;$('#payBtn').disabled=true;$('#payAmt').textContent='';return}
   let q=null;
   if(st.user){
     try{q=await api('POST','/api/quote',{items:st.cart,coupon:st.coupon});st.cart=q.items;saveCart();renderCart()}
     catch(e){
       if(e.code==='BAD_COUPON'){st.coupon=null;toast(e.message);return renderCheckoutSide()}
-      if(e.code==='ALREADY_OWNED'){toast(e.message);st.cart=[];renderCart();return renderCheckoutSide()}
+      if(e.code==='ALREADY_OWNED'){toast(e.message);await refreshOwned();normalise();renderCart();return renderCheckoutSide()}
+      if(e.code==='UNKNOWN_PRODUCT'||e.code==='NOT_AVAILABLE'){toast(e.message);st.cart=st.cart.filter(id=>st.sku.has(id)&&cov(id).size);renderCart();return renderCheckoutSide()}
       toast(e.message)
     }
   }
   const t=totals();
-  const sub=q?inr(q.subtotalPaise):tMoney(t.u,t.i),dis=q?q.discountPaise:null,tot=q?inr(q.amountPaise):tMoney(t.tu,t.ti);
+  const sub=q?inr(q.subtotalPaise):inr(t.sum),dis=q?q.discountPaise:t.disc,tot=q?inr(q.amountPaise):inr(t.total);
   $('#payBtn').disabled=!!(st.user&&!q);
   $('#payTxt').textContent=st.user?'Pay':'Log in to pay';
-  s.innerHTML=st.cart.map(id=>{const b=id==='bundle',p=b?null:pack(id);return `<div class="line-item"><img src="${D(b?4:p.num,b?2:1)}" alt=""><div class="t"><b>${b?'All 4 packs':'Vol. '+p.n+' · '+p.name}</b><span class="mono" style="color:var(--mut)">${b?'20':'5'} wallpapers</span></div><div style="text-align:right"><div class="price" style="font-size:20px">${priceMoney(priceOf(id))}</div><button class="rm" data-rm="${id}">Remove</button></div></div>`}).join('')+
+  s.innerHTML=st.cart.map((id,i)=>lineHtml(id,i)).join('')+
    `<div class="coupon"><input id="cpI" placeholder="Discount code" value="${esc(st.coupon||'')}" aria-label="Discount code"><button class="btn" id="cpB" style="padding:12px 22px" type="button">Apply</button></div>
-    <div class="sum"><div><span>Subtotal</span><span>${sub}</span></div>${(q?dis>0:t.pc)?`<div style="color:var(--acc)"><span>Code ${esc(st.coupon)}</span><span>−${q?inr(dis):tMoney(t.du,t.di)}</span></div>`:''}<div class="tot"><span>Total</span><span>${tot}</span></div></div>${q?'<p class="note" style="margin:0">Charged in INR.</p>':''}`;
+    <div class="sum"><div><span>Subtotal</span><span>${sub}</span></div>${dis>0?`<div style="color:var(--acc)"><span>Code ${esc(st.coupon)}</span><span>−${inr(dis)}</span></div>`:''}<div class="tot"><span>Total</span><span>${tot}</span></div></div>${q?'<p class="note" style="margin:0">Charged in INR. This is the amount shown on the payment screen.</p>':''}`;
   $('#payAmt').textContent='· '+tot;
   $('#cpB').onclick=async()=>{const v=$('#cpI').value.trim().toUpperCase();if(!v){st.coupon=null;return renderCheckoutSide()}
     if(!st.user){if(CODES[v]){st.coupon=v;toast(`Code ${v} applied`);return renderCheckoutSide()}toast('That code is not valid.');return}
@@ -1277,14 +1442,17 @@ function initDone(){
   const FINAL=['paid','failed','cancelled','expired'];
   async function paintPaid(o){
     st.cart=[];saveCart();renderCart();await refreshOwned();
-    let packs=[];try{packs=(await api('GET','/api/library')).packs}catch(_){}
-    const ids=o.items.some(i=>i.productId==='bundle')?packs.map(p=>p.productId):o.items.map(i=>i.productId);
+    let lib={files:[],archives:[]};try{lib=await api('GET','/api/library')}catch(_){}
+    const ids=o.items.map(i=>i.productId),cards=[];
+    ids.forEach(id=>{const c=[...cov(id)];
+      if(c.length>1){const a=lib.archives.find(x=>x.productId===id);if(a)cards.push({img:thumbOf(id),title:skuTitle(id),sub:skuDevice(id),url:a.url,label:'Download ZIP'})}
+      else if(c.length===1){const [w,d]=c[0].split('|'),f=lib.files.find(x=>x.wallpaperId===w&&x.device===d);if(f)cards.push({img:`/api/preview/${w}/${d}`,title:skuTitle(id),sub:`${DL[d]} · ${f.width} × ${f.height}`,url:f.url,label:'Download'})}});
     box.innerHTML=`<svg class="tick" viewBox="0 0 120 120"><circle cx="60" cy="60" r="54"/><path d="M38 62l16 16 30-34"/></svg>
      <span class="sub mono">Order ${esc(o.id.slice(0,8))} · ${inr(o.amountPaise)} paid</span>
      <h1 class="cond" style="font-size:clamp(70px,13vw,200px)">${chars('Thank',0)} <span class="ital" style="color:var(--acc)">${chars('you',300)}</span></h1>
      <p style="color:var(--bone-2);font-size:19px;margin-top:20px">Payment confirmed. Your wallpapers are unlocked.</p>
-     <div class="dl">${packs.filter(p=>ids.includes(p.productId)).map((p,i)=>`<div class="dlc rv in" style="--d:${i*120}ms"><img src="${esc(p.wallpapers[0].clean_desktop||p.wallpapers[0].preview_desktop)}" alt=""><div class="r"><div><b style="font:700 18px var(--f-d)">Vol. ${esc(pack(p.productId)?pack(p.productId).n:'')} · ${esc(p.name)}</b><div class="mono" style="color:var(--mut)">ZIP · 5 wallpapers · 4K</div></div><a class="btn" style="padding:12px 18px" href="${esc(p.downloadUrl)}" download>Download</a></div></div>`).join('')}</div>
-     <div class="cta" style="justify-content:center;margin-top:44px"><button class="btn" data-go="dashboard">Open my wallpapers <span class="arrow">→</span></button></div>`;
+     <div class="dl">${cards.map((c,i)=>`<div class="dlc rv in" style="--d:${i*120}ms"><img src="${esc(c.img)}" alt="" style="${/iPhone|Android/.test(c.sub)?'aspect-ratio:auto;max-height:300px;object-fit:contain':''}"><div class="r"><div><b style="font:700 18px var(--f-d)">${esc(c.title)}</b><div class="mono" style="color:var(--mut)">${esc(c.sub)}</div></div><a class="btn" style="padding:12px 18px" href="${esc(c.url)}" download>${c.label}</a></div></div>`).join('')}</div>
+     <div class="cta" style="justify-content:center;margin-top:44px"><button class="btn" data-go="dashboard">Open my downloads <span class="arrow">→</span></button></div>`;
     if(!celebrated){celebrated=true;confetti()}
   }
   function paint(o){
@@ -1317,18 +1485,31 @@ function initContact(){
 }
 
 /* ================= lightbox ================= */
-let lb={p:1,k:1,m:'laptop'};
-function openLB(p,k,m='laptop'){lb={p,k,m};showLB(true);$('#lb').classList.add('on');document.body.classList.add('lock')}
+const ORDER_W=PACKS.flatMap(p=>p.w.map((_,k)=>wid(p.num,k+1)));
+let lb={w:ORDER_W[0],d:'windows',opt:'single'};
+function openLBw(w,d){const dev=DEVS.includes(d)?d:st.dev;lb={w,d:variant(w,dev)?dev:(DEVS.find(x=>variant(w,x))||dev),opt:'single'};showLB(true);$('#lb').classList.add('on');document.body.classList.add('lock')}
+function openLB(p,k,m){openLBw(wid(p,k),m==='phone'?'iphone':m==='laptop'?'windows':st.dev)}
+/* The wallpaper page: choose a device, see that device's exact shape, then add that exact file to the cart. */
 function lbInfo(){
-  const pk=PACKS[lb.p-1],t=pk.w[lb.k-1],own=st.owned.has(pk.id);
-  $('#lbInfo').innerHTML=`<span class="mono" style="color:var(--mut)">Vol. ${esc(pk.n)} · ${esc(pk.name)}</span><h3 class="cond">${esc(t)}</h3><p>${esc(pk.desc)}</p>
-   <dl class="mono"><dt>Resolution</dt><dd>4K UHD · ${lb.m==='phone'?'2160 × 3840':'3840 × 2160'}</dd><dt>Category</dt><dd>${esc(pk.name)} collection</dd><dt>Format</dt><dd>JPG · original quality</dd></dl>
-   ${own?`<span class="mono" style="color:var(--mut)">Unlocked · no watermark</span><a class="btn" href="/api/download/${esc(pk.id)}" download>Download Original 4K Wallpapers <span class="arrow">↓</span></a><span class="note">Your pack downloads as a ZIP of the original files. Find it again any time in My account.</span>`
-        :`<div class="pr">${priceMoney(P1)} <span class="mono" style="font-size:12px;color:var(--mut)">for all 5 in Vol. ${esc(pk.n)}</span></div><button class="btn" id="lbBuy">Unlock Full Resolution <span class="arrow">→</span></button><span class="note">Preview only: the original 4K file is never sent to your browser before purchase.</span>`}`;
-  const b=$('#lbBuy');if(b)b.onclick=()=>{closeLB();add(pk.id,$('#lbImg'))};
+  const w=W(lb.w),pk=pack(w.pack_id),v=variant(lb.w,lb.d),n=ORDER_W.indexOf(lb.w)%5;
+  const single=st.sku.get(skuOf(lb.w,lb.d)),all=st.sku.get(skuOf(lb.w,'all'));
+  const ownThis=owns(lb.w,lb.d),ownAllDev=DEVS.every(d=>!variant(lb.w,d)||owns(lb.w,d));
+  const opt=lb.opt==='all'&&all?'all':'single',cur=opt==='all'?all:single;
+  const nAll=DEVS.filter(d=>variant(lb.w,d)).length;
+  $('#lbInfo').innerHTML=`<span class="mono" style="color:var(--mut)">Vol. ${esc(pk.n)} · ${esc(pk.name)}</span><h3 class="cond">${esc(w.title)}</h3><p>${esc(pk.tag)}</p>
+   <span class="mono" style="color:var(--mut)">Choose your device</span>${devPick('data-ld',lb.d,d=>!!variant(lb.w,d))}
+   ${v?`<dl class="mono"><dt>Device</dt><dd>${esc(DL[lb.d])}</dd><dt>Resolution</dt><dd>${esc(resTxt(v))}</dd><dt>Orientation</dt><dd>${lb.d==='iphone'||lb.d==='android'?'Portrait':'Landscape'}</dd><dt>Size note</dt><dd>Cut from the ${v.source_w} × ${v.source_h} original, enlarged ${v.upscale}×</dd><dt>Format</dt><dd>JPG</dd></dl>`
+     :`<p class="na">Not Available for This Device</p>`}
+   ${!v?`<button class="btn" disabled>Not Available for This Device</button>`
+    :ownThis&&(opt==='single'||ownAllDev)?`<span class="mono" style="color:var(--mut)">You own this · no watermark</span><a class="btn" href="/api/file/${esc(lb.w)}/${esc(lb.d)}" download>Download for ${esc(DL[lb.d])} <span class="arrow">↓</span></a><span class="note">Find it again any time in My downloads.</span>`
+    :`<div class="opts" role="group" aria-label="Purchase option"><button type="button" class="op ${opt==='single'?'on':''}" data-lo="single"><b>This device</b><span>${esc(DL[lb.d])} only</span><em>${single?inr(single.price_paise):''}</em></button>${all?`<button type="button" class="op ${opt==='all'?'on':''}" data-lo="all"><b>All devices</b><span>${nAll} versions</span><em>${inr(all.price_paise)}</em></button>`:''}</div>
+      <button class="btn" id="lbBuy">Add to cart · ${cur?inr(cur.price_paise):''} <span class="arrow">→</span></button><span class="note">You see a watermarked, low-resolution preview here. The clean file is sent only after payment.</span>`}`;
+  $$('#lbInfo [data-ld]').forEach(b=>b.onclick=()=>{lb.d=b.dataset.ld;setDev(lb.d);showLB()});
+  $$('#lbInfo [data-lo]').forEach(b=>b.onclick=()=>{lb.opt=b.dataset.lo;lbInfo()});
+  const b=$('#lbBuy');if(b)b.onclick=()=>{const id=cur.id;closeLB();add(id,$('#lbImg'))};
 }
-function showLB(first){const im=$('#lbImg');im.src=PV(lb.p,lb.k,lb.m);im.draggable=false;const pk=PACKS[lb.p-1];$('#lbCap').textContent=`Vol. ${pk.n} · ${pk.w[lb.k-1]}`;lbInfo();im.animate([{opacity:0,transform:first?'scale(.8) translateY(30px)':'translateX(40px)'},{opacity:1,transform:'none'}],{duration:600,easing:'cubic-bezier(.16,1,.3,1)'})}
-function stepLB(d){let n=(lb.p-1)*5+(lb.k-1)+d;n=(n+20)%20;lb.p=Math.floor(n/5)+1;lb.k=n%5+1;showLB()}
+function showLB(first){const im=$('#lbImg');im.src=PVd(lb.w,lb.d);im.alt=W(lb.w).title;im.draggable=false;const pk=pack(W(lb.w).pack_id);$('#lbCap').textContent=`Vol. ${pk.n} · ${W(lb.w).title} · ${DL[lb.d]}`;lbInfo();im.animate([{opacity:0,transform:first?'scale(.8) translateY(30px)':'translateX(40px)'},{opacity:1,transform:'none'}],{duration:600,easing:'cubic-bezier(.16,1,.3,1)'})}
+function stepLB(d){const i=(ORDER_W.indexOf(lb.w)+d+20)%20;lb.w=ORDER_W[i];if(!variant(lb.w,lb.d))lb.d=DEVS.find(x=>variant(lb.w,x))||lb.d;lb.opt='single';showLB()}
 function closeLB(){$('#lb').classList.remove('on');document.body.classList.remove('lock')}
 $('#lbX').onclick=closeLB;$('#lbP').onclick=()=>stepLB(-1);$('#lbN').onclick=()=>stepLB(1);
 $('#lb').addEventListener('click',e=>{if(e.target.id==='lb')closeLB()});
@@ -1344,7 +1525,7 @@ function confetti(){
 }
 
 /* ================= preview protection (deterrent; originals never leave the server before purchase) ================= */
-const PROT='img,.wp,.pc-img,.sc,.hs-c,.mason figure,.strip,.scr,.stack,.ba,.dlc,#lb .lbw,[data-lb]';
+const PROT='img,.bimg,.drow,.wp,.pc-img,.sc,.hs-c,.mason figure,.strip,.scr,.stack,.ba,.dlc,#lb .lbw,[data-lb]';
 const isPrev=t=>t&&t.closest&&t.closest(PROT);
 ['contextmenu','dragstart','selectstart','copy','cut'].forEach(ev=>document.addEventListener(ev,e=>{if(isPrev(e.target)||isPrev(document.activeElement)&&ev==='copy')e.preventDefault()},true));
 const lockImgs=r=>(r.querySelectorAll?r.querySelectorAll('img:not([draggable="false"])'):[]).forEach(i=>{i.draggable=false});
@@ -1352,12 +1533,15 @@ lockImgs(document);new MutationObserver(m=>m.forEach(x=>x.addedNodes.forEach(n=>
 
 /* ================= global events ================= */
 document.addEventListener('click',e=>{
+  const dv=e.target.closest('[data-dev]');if(dv){st.bdev=dv.dataset.dev;setDev(dv.dataset.dev)}
+  const lw=e.target.closest('[data-lbw]');if(lw&&!e.target.closest('[data-add],[data-go]')){openLBw(lw.dataset.lbw,lw.dataset.lbd);return}
   const a=e.target.closest('[data-add]');if(a){e.preventDefault();e.stopPropagation();add(a.dataset.add,a);return}
   const r=e.target.closest('[data-rm]');if(r){remove(r.dataset.rm);return}
   const d=e.target.closest('[data-dl]');if(d){toast(d.dataset.dl+' ZIP: the live shop downloads this file');return}
   const l=e.target.closest('[data-lb]');if(l&&!e.target.closest('[data-go]')){const [p,k]=l.dataset.lb.split('-').map(Number);openLB(p,k);return}
   const g=e.target.closest('[data-go]');if(g){e.preventDefault();go(g.dataset.go,e,g.dataset.scroll);return}
 });
+document.addEventListener('change',e=>{const c=e.target.closest&&e.target.closest('[data-chg]');if(c)changeDevice(c.dataset.chg,c.value)});
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){closeLB();closeDrawer();closeModal();closeMenu()}
   if($('#lb').classList.contains('on')){if(e.key==='ArrowRight')stepLB(1);if(e.key==='ArrowLeft')stepLB(-1)}
@@ -1365,7 +1549,6 @@ document.addEventListener('keydown',e=>{
 });
 $('#cartBtn').onclick=openDrawer;$('#dClose').onclick=closeDrawer;$('#scrim').onclick=()=>{closeDrawer();closeMenu()};
 $('#burger').onclick=()=>document.body.classList.toggle('menu-open');
-$$('[data-cur]').forEach(b=>b.onclick=()=>{st.cur=b.dataset.cur;updatePrices()});
 addEventListener('hashchange',()=>{const n=location.hash.slice(1);if(VIEWS[n]&&n!==st.route&&!busy)go(n)});
 
 /* modal */
@@ -1400,7 +1583,7 @@ addEventListener('scroll',()=>{if(!ticking){ticking=true;requestAnimationFrame(o
 })();
 
 /* announce bar */
-(function(){const m=['20 wallpapers in four volumes','Every file is 4K, in laptop and phone sizes','Pay with UPI. Download straight after','One payment, no subscription'];$('#mqBar').innerHTML=[...m,...m].map(t=>`<span class="mono">${t}</span>`).join('')})();
+(function(){const m=['20 wallpapers in four volumes','Exact sizes for iPhone, Android, Windows and Mac','Prices in INR. Pay with UPI','One payment, no subscription'];$('#mqBar').innerHTML=[...m,...m].map(t=>`<span class="mono">${t}</span>`).join('')})();
 
 /* ================= loader ================= */
 function runLoader(replay){

@@ -2,17 +2,17 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { boot, signupAndVerify, webhook } from './helpers.js';
 
-const buy = (c, items = ['time'], extra = {}, headers) => c.post('/api/orders', { items, ...extra }, headers);
+const buy = (c, items = ['time~windows'], extra = {}, headers) => c.post('/api/orders', { items, ...extra }, headers);
 const pay = async (ctx, order, patch) => { const id = (await ctx.db.prepare('SELECT provider_payment_id p FROM payments WHERE order_id=?').get(order.id)).p; ctx.gw.set(id, patch); return id; };
 const hook = (ctx, order, id, extra = {}) => webhook(ctx, { event: 'OBSERVED_SUCCESS', settlementState: 'NOT_RECONCILED', orderId: order.id, amountPaise: order.amountPaise, paymentId: id, utr: '123456789012', ...extra });
 
 test('catalog is public, ordering needs login, and totals are priced on the server', async () => {
   const ctx = await boot(); const anon = ctx.client();
   const cat = await anon.get('/api/catalog');
-  assert.equal(cat.json.products.length, 5); assert.equal(cat.json.products.find((p) => p.id === 'time').wallpapers.length, 5);
-  assert.equal((await anon.post('/api/orders', { items: ['time'] })).status, 401);
+  assert.equal(cat.json.wallpapers.length, 20); assert.equal(cat.json.wallpapers[0].variants.length, 4); assert.equal(cat.json.products.find((p) => p.id === 'time~windows').price_paise, 39900); assert.equal(cat.json.products.some((p) => p.id === 'bundle'), false);
+  assert.equal((await anon.post('/api/orders', { items: ['time~windows'] })).status, 401);
   const c = await signupAndVerify(ctx);
-  const r = await c.post('/api/orders', { items: ['time'], amountPaise: 1, price: 1, total: 1 });   // forged price fields are ignored
+  const r = await c.post('/api/orders', { items: ['time~windows'], amountPaise: 1, price: 1, total: 1 });   // forged price fields are ignored
   assert.equal(r.status, 201); assert.equal(r.json.order.amountPaise, 39900);
   assert.equal(r.json.order.payment.checkoutUrl.startsWith('https://pay.example/checkout/'), true);
   assert.equal(ctx.gw.calls.find((x) => x[0] === 'create')[1].amountPaise, 39900);
@@ -21,40 +21,40 @@ test('catalog is public, ordering needs login, and totals are priced on the serv
   await ctx.close();
 });
 
-test('coupons apply on the server; all four packs collapse into the bundle price', async () => {
+test('coupons apply on the server; an item already inside a bigger item is not charged twice', async () => {
   const ctx = await boot(); const c = await signupAndVerify(ctx);
-  const q = await c.post('/api/quote', { items: ['old-money', 'time', 'machines', 'late-nights'], coupon: 'ink10' });
-  assert.deepEqual(q.json.items, ['bundle']); assert.equal(q.json.subtotalPaise, 99900); assert.equal(q.json.discountPaise, 9990); assert.equal(q.json.amountPaise, 89910);
-  assert.equal((await c.post('/api/quote', { items: ['time'], coupon: 'FAKE' })).json.error.code, 'BAD_COUPON');
+  const q = await c.post('/api/quote', { items: ['time~windows', 'time-2~windows', 'bundle~windows'], coupon: 'ink10' });
+  assert.deepEqual(q.json.items, ['bundle~windows']); assert.equal(q.json.subtotalPaise, 99900); assert.equal(q.json.discountPaise, 9990); assert.equal(q.json.amountPaise, 89910);
+  assert.equal((await c.post('/api/quote', { items: ['time~windows'], coupon: 'FAKE' })).json.error.code, 'BAD_COUPON');
   await ctx.close();
 });
 
 test('successful payment: signed webhook is confirmed with the gateway, order becomes Paid, content unlocks', async () => {
   const ctx = await boot(); const c = await signupAndVerify(ctx);
-  const { order } = (await buy(c, ['time'])).json;
-  assert.equal((await c.get('/api/download/time')).status, 403);                        // locked before payment
-  assert.equal((await c.get('/api/library')).json.packs.length, 0);
+  const { order } = (await buy(c, ['time~windows'])).json;
+  assert.equal((await c.get('/api/download/time~windows')).status, 403);                        // locked before payment
+  assert.equal((await c.get('/api/library')).json.files.length, 0);
   const id = await pay(ctx, order, { status: 'OBSERVED_SUCCESS', settlementState: 'NOT_RECONCILED', utr: '123456789012' });
   const w = await hook(ctx, order, id);
   assert.equal(w.status, 200); assert.equal(w.json.outcome, 'paid');
   assert.ok(ctx.gw.calls.some((x) => x[0] === 'get'), 'backend asked the gateway to confirm');
   const o = (await c.get(`/api/orders/${order.id}`)).json.order;
   assert.equal(o.status, 'paid'); assert.equal(o.payment.transactionId, id); assert.equal(o.payment.utr, '123456789012'); assert.ok(o.paidAt);
-  const lib = (await c.get('/api/library')).json.packs;
-  assert.deepEqual(lib.map((p) => p.productId), ['time']); assert.equal(lib[0].wallpapers.length, 5);
-  const dl = await fetch(c.base + '/api/download/time', { headers: { cookie: Object.entries(c.jar).map(([k, v]) => `${k}=${v}`).join('; ') } });
-  assert.equal(dl.status, 200); assert.equal(await dl.text(), 'ZIPDATA:Inkdrift_Vol2_Time');
-  assert.equal((await c.get('/api/download/machines')).status, 403);                    // other packs stay locked
+  const lib = (await c.get('/api/library')).json;
+  assert.equal(lib.files.length, 5); assert.deepEqual(lib.archives.map((a) => a.productId), ['time~windows']);
+  const dl = await fetch(c.base + '/api/download/time~windows', { headers: { cookie: Object.entries(c.jar).map(([k, v]) => `${k}=${v}`).join('; ') } });
+  assert.equal(dl.status, 200); assert.equal(dl.headers.get('content-type'), 'application/zip'); assert.equal((await dl.arrayBuffer()).byteLength > 1_000_000, true);
+  assert.equal((await c.get('/api/download/machines~windows')).status, 403);                    // other packs stay locked
   await ctx.close();
 });
 
-test('bundle purchase unlocks all four packs; already-owned items cannot be bought again', async () => {
+test('bundle purchase unlocks the whole collection for that device; already-owned items cannot be bought again', async () => {
   const ctx = await boot(); const c = await signupAndVerify(ctx);
-  const { order } = (await buy(c, ['bundle'])).json; assert.equal(order.amountPaise, 99900);
+  const { order } = (await buy(c, ['bundle~windows'])).json; assert.equal(order.amountPaise, 99900);
   await hook(ctx, order, await pay(ctx, order, { status: 'OBSERVED_SUCCESS' }));
-  assert.equal((await c.get('/api/library')).json.packs.length, 4);
-  assert.equal((await buy(c, ['bundle'])).json.error.code, 'ALREADY_OWNED');
-  assert.equal((await buy(c, ['time'])).json.error.code, 'ALREADY_OWNED');
+  assert.equal((await c.get('/api/library')).json.files.length, 20);
+  assert.equal((await buy(c, ['bundle~windows'])).json.error.code, 'ALREADY_OWNED');
+  assert.equal((await buy(c, ['time~windows'])).json.error.code, 'ALREADY_OWNED');
   await ctx.close();
 });
 
@@ -72,7 +72,7 @@ test('bad webhook signature, stale timestamp and tampered amount never unlock an
   const wrongOrder = await webhook(ctx2, { ...base, orderId: 'someone-elses' });
   assert.equal(wrongOrder.json.outcome, 'order_mismatch');
   assert.equal((await ctx2.db.prepare("SELECT status FROM orders").get()).status, 'pending');
-  assert.equal((await c2.get('/api/download/time')).status, 403);
+  assert.equal((await c2.get('/api/download/time~windows')).status, 403);
   await ctx.close(); await ctx2.close();
 });
 
@@ -109,7 +109,7 @@ test('failed, cancelled and expired payments leave content locked and show the r
     const w = await webhook(ctx, { event: gwStatus, orderId: order.id, amountPaise: order.amountPaise, paymentId: id });
     assert.equal(w.json.outcome, expected);
     assert.equal((await c.get(`/api/orders/${order.id}`)).json.order.status, expected);
-    assert.equal((await c.get('/api/download/time')).status, 403);
+    assert.equal((await c.get('/api/download/time~windows')).status, 403);
     await ctx.close();
   }
 });
@@ -128,19 +128,19 @@ test('manual-review payments stay pending and never unlock', async () => {
   const { order } = (await buy(c)).json; const id = await pay(ctx, order, { status: 'MANUAL_REVIEW' });
   const w = await webhook(ctx, { event: 'MANUAL_REVIEW', orderId: order.id, amountPaise: order.amountPaise, paymentId: id });
   assert.equal(w.json.outcome, 'pending_verification');
-  assert.equal((await c.get('/api/download/time')).status, 403);
+  assert.equal((await c.get('/api/download/time~windows')).status, 403);
   await ctx.close();
 });
 
 test('duplicate payment prevention: same cart reuses the open payment, idempotency keys replay, different carts retire the old one', async () => {
   const ctx = await boot(); const c = await signupAndVerify(ctx);
-  const a = (await buy(c, ['time'], {}, { 'idempotency-key': 'k1' })).json.order;
-  const b = await buy(c, ['time'], {}, { 'idempotency-key': 'k1' });
+  const a = (await buy(c, ['time~windows'], {}, { 'idempotency-key': 'k1' })).json.order;
+  const b = await buy(c, ['time~windows'], {}, { 'idempotency-key': 'k1' });
   assert.equal(b.json.order.id, a.id); assert.equal(b.json.reused, true);
-  assert.equal((await buy(c, ['machines'], {}, { 'idempotency-key': 'k1' })).json.error.code, 'IDEMPOTENCY_CONFLICT');
-  assert.equal((await buy(c, ['time'])).json.order.id, a.id);                          // double-click: same order, no second charge
+  assert.equal((await buy(c, ['machines~windows'], {}, { 'idempotency-key': 'k1' })).json.error.code, 'IDEMPOTENCY_CONFLICT');
+  assert.equal((await buy(c, ['time~windows'])).json.order.id, a.id);                          // double-click: same order, no second charge
   assert.equal(ctx.gw.calls.filter((x) => x[0] === 'create').length, 1);
-  const other = (await buy(c, ['machines'])).json.order;
+  const other = (await buy(c, ['machines~windows'])).json.order;
   assert.notEqual(other.id, a.id);
   assert.equal((await ctx.db.prepare('SELECT status FROM orders WHERE id=?').get(a.id)).status, 'cancelled');
   await ctx.close();
@@ -161,7 +161,7 @@ test('missed webhook: polling the order confirms payment with the gateway and un
   await pay(ctx, order, { status: 'OBSERVED_SUCCESS', utr: '999999999999' });
   await ctx.db.prepare('UPDATE payments SET last_checked_at=0').run();
   const o = (await c.get(`/api/orders/${order.id}`)).json.order;
-  assert.equal(o.status, 'paid'); assert.equal((await c.get('/api/library')).json.packs.length, 1);
+  assert.equal(o.status, 'paid'); assert.equal((await c.get('/api/library')).json.archives.length, 1);
   await ctx.close();
 });
 
@@ -195,13 +195,13 @@ test('cash-on-delivery or counter payments can never unlock a download', async (
 
 test('users only see their own orders and files; purchase history carries every required field', async () => {
   const ctx = await boot(); const a = await signupAndVerify(ctx, 'Asha', 'asha@example.com'); const b = await signupAndVerify(ctx, 'Bo', 'bo@example.com');
-  const { order } = (await buy(a, ['time'], { coupon: 'INK10' })).json;
+  const { order } = (await buy(a, ['time~windows'], { coupon: 'INK10' })).json;
   await hook(ctx, order, await pay(ctx, order, { status: 'OBSERVED_SUCCESS' }));
   assert.equal((await b.get(`/api/orders/${order.id}`)).status, 404);
-  assert.equal((await b.get('/api/download/time')).status, 403);
+  assert.equal((await b.get('/api/download/time~windows')).status, 403);
   assert.equal((await b.get('/api/orders')).json.orders.length, 0);
   const h = (await a.get('/api/orders')).json.orders[0];
-  assert.equal(h.items[0].productId, 'time'); assert.equal(h.items[0].name, 'Time'); assert.equal(h.amountPaise, 35910);
+  assert.equal(h.items[0].productId, 'time~windows'); assert.equal(h.items[0].name, 'Vol. II · Time · Windows'); assert.equal(h.amountPaise, 35910);
   assert.equal(h.status, 'paid'); assert.ok(h.payment.transactionId); assert.ok(h.createdAt); assert.ok(h.paidAt);
   assert.ok(!('checkoutUrl' in h.payment) || h.payment.checkoutUrl === undefined);
   await ctx.close();
@@ -214,6 +214,6 @@ test('purchases and sessions persist across a restart of the app (same database)
   const app2 = createApp({ db: ctx.db, cfg: ctx.cfg, emailTransport: async () => {}, youpiClient: ctx.gw });
   const s2 = await new Promise((r) => { const s = http.createServer(app2).listen(0, () => r(s)); });
   const c2 = ctx.client(); c2.base = `http://127.0.0.1:${s2.address().port}`; c2.jar = { ...c.jar };
-  assert.equal((await c2.get('/api/library')).json.packs[0].productId, 'time');
+  assert.equal((await c2.get('/api/library')).json.archives[0].productId, 'time~windows');
   s2.closeAllConnections(); s2.close(); await ctx.close();
 });

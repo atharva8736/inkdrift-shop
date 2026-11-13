@@ -8,7 +8,6 @@ import crypto from 'node:crypto';
 import { chromium } from 'playwright-core';
 
 const SECRET = 'whsec_e2e', tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'ink-e2e-'));
-for (const f of ['Inkdrift_Vol1_Old_Money', 'Inkdrift_Vol2_Time', 'Inkdrift_Vol3_Machines', 'Inkdrift_Vol4_Late_Nights']) fs.writeFileSync(path.join(tmp, f + '.zip'), 'ZIP:' + f);
 const listen = (h) => new Promise((r) => { const s = http.createServer(h).listen(0, () => r(s)); });
 const body = async (req) => { const c = []; for await (const x of req) c.push(x); return Buffer.concat(c).toString(); };
 
@@ -60,15 +59,29 @@ try {
   step('correct OTP → logged in → dashboard');
   await page.waitForTimeout(1800); await page.screenshot({ path: out('3_dashboard_empty') });
 
-  await page.evaluate(() => go('home', null, 'packs')); await page.waitForTimeout(2500);
-  await page.evaluate(() => add('time', document.querySelector('.pc .add')));
-  await page.waitForTimeout(900); await page.click('#dFoot .btn'); await page.waitForSelector('#coSide .tot', { timeout: 8000 }); await page.waitForTimeout(1500);
+  // Choose a device on the home page, open a wallpaper, buy the iPhone version, then switch the cart line to Android
+  await page.evaluate(() => go('home', null, 'devices')); await page.waitForTimeout(2500);
+  await page.screenshot({ path: out('3b_devices') });
+  await page.click('.dcard[data-dev="iphone"]'); await page.waitForSelector('#bGrid .bcard', { timeout: 8000 }); await page.waitForTimeout(1500);
+  step('browse filtered to iPhone: ' + (await page.textContent('#bCount')).trim());
+  await page.screenshot({ path: out('3c_browse_iphone') });
+  await page.click('#bGrid .bcard .bimg'); await page.waitForSelector('#lb.on #lbBuy', { timeout: 8000 }); await page.waitForTimeout(900);
+  await page.screenshot({ path: out('3d_wallpaper_page') });
+  step('wallpaper page: ' + (await page.textContent('#lbInfo dl')).replace(/\s+/g, ' ').slice(0, 130));
+  await page.click('#lbInfo [data-ld="android"]'); await page.waitForTimeout(500);
+  step('device switched in place, preview ' + (await page.getAttribute('#lbImg', 'src')));
+  await page.click('#lbBuy'); await page.waitForSelector('#dItems .line-item', { timeout: 8000 }); await page.waitForTimeout(1200);
+  step('cart line: ' + (await page.textContent('#dItems .line-item')).replace(/\s+/g, ' ').slice(0, 120));
+  await page.screenshot({ path: out('3e_cart') });
+  await page.selectOption('#dItems select[data-chg]', 'iphone'); await page.waitForTimeout(600);
+  step('cart after changing device: ' + (await page.textContent('#dItems .line-item')).replace(/\s+/g, ' ').slice(0, 120));
+  await page.click('#dFoot .btn'); await page.waitForSelector('#coSide .tot', { timeout: 8000 }); await page.waitForTimeout(1500);
   await page.screenshot({ path: out('4_checkout') });
   step('checkout total (server quote): ' + (await page.textContent('#coSide .tot')).replace(/\s+/g, ' '));
   await Promise.all([page.waitForURL(/\/checkout\/pay_1/), page.click('#payBtn')]);
   step('redirected to gateway checkout: ' + page.url());
   const pay = gwPay.get('pay_1');
-  // the gateway "observes" the bank credit and sends its signed webhook
+  step('gateway amount (paise): ' + pay.amountPaise);
   const payload = JSON.stringify({ event: 'OBSERVED_SUCCESS', settlementState: 'NOT_RECONCILED', orderId: pay.orderId, amountPaise: pay.amountPaise, paymentId: 'pay_1', utr: '412345678901', deliveryId: crypto.randomUUID(), timestamp: Date.now() });
   pay.status = 'OBSERVED_SUCCESS'; pay.utr = '412345678901';
   const sig = 'sha256=' + crypto.createHmac('sha256', SECRET).update(payload).digest('hex');
@@ -79,9 +92,11 @@ try {
   step('payment-confirmed page shows download link');
   const href = await page.getAttribute('.dl a[download]', 'href');
   const dl = await ctx.request.get(base + href);
-  step(`download → ${dl.status()} ${(await dl.text())}`);
-  const locked = await ctx.request.get(base + '/api/download/machines'); step('locked pack download → ' + locked.status());
-  await page.evaluate(() => go('dashboard')); await page.waitForSelector('.dpack', { timeout: 8000 }); await page.waitForTimeout(1500);
+  const buf = await dl.body();
+  step(`download → ${dl.status()} ${dl.headers()['content-type']} ${buf.length} bytes ${dl.headers()['content-disposition']}`);
+  const locked = await ctx.request.get(base + '/api/file/old-money-1/android'); step('other device of the same wallpaper → ' + locked.status());
+  const locked2 = await ctx.request.get(base + '/api/download/bundle~windows'); step('unpurchased collection → ' + locked2.status());
+  await page.evaluate(() => go('dashboard')); await page.waitForSelector('.drow', { timeout: 8000 }); await page.waitForTimeout(1500);
   await page.screenshot({ path: out('6_dashboard_owned') });
   await page.click('[data-dt="hist"]'); await page.waitForSelector('.hrow', { timeout: 8000 }); await page.waitForTimeout(800); await page.screenshot({ path: out('7_history') });
   step('history row: ' + (await page.textContent('.hrow')).replace(/\s+/g, ' ').slice(0, 140));
