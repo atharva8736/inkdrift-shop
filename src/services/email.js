@@ -35,15 +35,16 @@ export function brevoTransport(cfg) {
 export function createEmailService(cfg, transport = cfg.email.provider === 'brevo' ? brevoTransport(cfg) : resendTransport(cfg)) {
   const brand = cfg.email.brand;
   return {
-    async sendOtp({ to, name, code, ttlMinutes }) {
-      const subject = `${code} is your ${brand} verification code`;
-      const text = `Hi ${name},\n\nYour ${brand} verification code is ${code}.\nIt expires in ${ttlMinutes} minutes. If you did not create an account, ignore this email.\n`;
+    async sendOtp({ to, name, code, ttlMinutes, purpose = 'signup' }) {
+      const login = purpose === 'login';
+      const subject = `${code} is your ${brand} ${login ? 'login' : 'verification'} code`;
+      const text = `Hi ${name},\n\nYour ${brand} ${login ? 'login' : 'verification'} code is ${code}.\nIt expires in ${ttlMinutes} minutes. If you did not ${login ? 'try to log in' : 'create an account'}, ignore this email.\n`;
       const html = `<div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:32px;background:#07080c;color:#ece7db">
 <h1 style="margin:0 0 4px;font-size:28px">INK<i style="color:#4a63ff">drift</i></h1>
-<p style="color:#8e93a3;margin:0 0 28px">Verify your email</p>
-<p>Hi ${esc(name)}, enter this code to finish creating your account:</p>
+<p style="color:#8e93a3;margin:0 0 28px">${login ? 'Log in' : 'Verify your email'}</p>
+<p>Hi ${esc(name)}, enter this code to ${login ? 'log in' : 'finish creating your account'}:</p>
 <p style="font-size:40px;letter-spacing:10px;font-weight:700;margin:24px 0">${code}</p>
-<p style="color:#8e93a3">The code expires in ${ttlMinutes} minutes. If you did not create an account, you can ignore this email.</p></div>`;
+<p style="color:#8e93a3">The code expires in ${ttlMinutes} minutes. If you did not ${login ? 'try to log in' : 'create an account'}, you can ignore this email.</p></div>`;
       try { await transport({ to, subject, html, text }); }
       catch (e) {
         console.error('[email] send failed:', e.message);

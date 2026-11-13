@@ -69,9 +69,9 @@ export class Client {
 
 export const lastCode = (mailbox) => mailbox.at(-1).text.match(/code is (\d{6})/)[1];
 
-export async function signupAndVerify(ctx, name = 'Asha Rao', email = 'asha@example.com', password = 'correct-horse-9') {
+export async function signupAndVerify(ctx, name = 'Asha Rao', email = 'asha@example.com') {
   const c = ctx.client();
-  const s = await c.post('/api/auth/signup', { name, email, password });
+  const s = await c.post('/api/auth/start', { mode: 'signup', name, email });
   if (s.status !== 201) throw new Error('signup failed ' + s.text);
   const v = await c.post('/api/auth/verify-otp', { email, code: lastCode(ctx.mailbox) });
   if (v.status !== 200) throw new Error('verify failed ' + v.text);

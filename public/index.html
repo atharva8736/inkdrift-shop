@@ -999,22 +999,18 @@ function initLogin(){
   const setErr=m=>{const e=$('#aErr');if(e)e.textContent=m||''};
   const fieldErr=(id,msg)=>{const i=$('#'+id);if(!i)return;const f=i.parentElement,em=$('.em',f);if(em)em.textContent=msg||'';f.classList.remove('err');if(msg){void f.offsetWidth;f.classList.add('err')}};
   const EMAIL=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-  const validate=(name,email,password)=>{
+  const validate=(name,email)=>{
     let ok=true,first=null;const bad=(id,m)=>{fieldErr(id,m);ok=false;first??=id};
     if(tab==='up'&&(name.length<2||!/\p{L}/u.test(name)))bad('aN','Enter your full name.');
     if(!EMAIL.test(email))bad('aE','Enter a valid email address, like you@gmail.com.');
-    if(!password)bad('aP','Enter your password.');
-    else if(tab==='up'&&(password.length<8||!/[A-Za-z]/.test(password)||!/\d/.test(password)))bad('aP','Use 8+ characters with at least one letter and one number.');
     if(first)$('#'+first).focus();
     return ok};
   const draw=()=>{
     form.classList.remove('form-swap');void form.offsetWidth;form.classList.add('form-swap');
-    form.innerHTML=(tab==='up'?fld('aN','text','Full name'):'')+fld('aE','email','Email')+fld('aP','password','Password',eye)+(tab==='up'?'<div class="pwm" id="pwm"><i></i><i></i><i></i><i></i></div><div class="pwt mono" id="pwt">Use 8+ characters with a letter and a number</div>':'')+
-     `<p class="ferr" id="aErr" role="alert"></p><button class="btn block" type="submit"><span id="aBtn">${tab==='in'?'Log in':'Create account'}</span> <span class="arrow">→</span></button>`;
-    $('[data-eye]').onclick=e=>{const i=$('#aP');i.type=i.type==='password'?'text':'password';e.target.textContent=i.type==='password'?'Show':'Hide'};
-    const sub=$('#aSub');if(sub)sub.textContent=tab==='in'?'Log in to download your wallpapers, or create a free account in seconds.':'Create your free account. We email you a 6-digit code to confirm it is really you.';
+    form.innerHTML=(tab==='up'?fld('aN','text','Full name'):'')+fld('aE','email','Email')+
+     `<p class="ferr" id="aErr" role="alert"></p><button class="btn block" type="submit"><span id="aBtn">Send me a code</span> <span class="arrow">→</span></button>`;
+    const sub=$('#aSub');if(sub)sub.textContent=tab==='in'?'No password needed. Enter your email and we send you a 6-digit code to log in.':'Create your free account. Enter your name and email and we send you a 6-digit code.';
     $$('#aForm input').forEach(i=>i.addEventListener('input',()=>fieldErr(i.id,'')));
-    if(tab==='up'){const pw=$('#aP');pw.addEventListener('input',()=>{const v=pw.value;let n=0;if(v.length>=8)n++;if(/[a-z]/.test(v)&&/[A-Z]/.test(v))n++;if(/\d/.test(v))n++;if(/[^A-Za-z0-9]/.test(v)||v.length>=12)n++;const col=['#ff5a4d','#ff9f43','#d8c24a','#3ddc97'][Math.max(0,n-1)];$$('#pwm i').forEach((b,k)=>{b.style.background=k<n?col:''});$('#pwt').textContent=!v?'Use 8+ characters with a letter and a number':['Too weak','Weak','Good','Strong'][Math.max(0,n-1)]})}
   };
   const bar=()=>{const b=$(`#tabs [data-t="${tab}"]`),i=$('#tabs i');if(!b||!i)return;i.style.left=b.offsetLeft+'px';i.style.width=b.offsetWidth+'px'};
   $$('#tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;$$('#tabs button').forEach(x=>x.classList.toggle('on',x===b));bar();draw()});
@@ -1028,16 +1024,14 @@ function initLogin(){
   const finish=async()=>{await refreshOwned();setUserUi();const nx=st.next||'dashboard';st.next=null;go(nx)};
   form.onsubmit=async e=>{
     e.preventDefault();
-    const email=$('#aE').value.trim(),password=$('#aP').value,name=$('#aN')?$('#aN').value.trim():'';
-    if(!validate(name,email,password))return;
+    const email=$('#aE').value.trim(),name=$('#aN')?$('#aN').value.trim():'';
+    if(!validate(name,email))return;
     const b=$('.btn',form),lbl=$('#aBtn').textContent;b.disabled=true;$('#aBtn').innerHTML='<span class="spin" style="display:inline-block"></span>';setErr('');
     try{
-      if(tab==='up'){const r=await api('POST','/api/auth/signup',{name,email,password});otpScreen(email,r)}
-      else{const r=await api('POST','/api/auth/login',{email,password});st.user=r.user;finish()}
+      const r=await api('POST','/api/auth/start',{mode:tab==='up'?'signup':'login',name,email});otpScreen(email,r);
     }catch(err){
-      if(err.code==='EMAIL_NOT_VERIFIED'){try{const r=await api('POST','/api/auth/resend-otp',{email});otpScreen(email,r,'Your email is not verified yet. We sent a fresh code.')}catch(_){otpScreen(email,{},'Your email is not verified yet. Use the code we sent earlier, or request a new one.')}return}
       b.disabled=false;$('#aBtn').textContent=lbl;setErr(err.message);
-      if(err.code==='INVALID_EMAIL'||err.code==='DISPOSABLE_EMAIL'||err.code==='EMAIL_EXISTS'){setErr('');fieldErr('aE',err.message)}else if(err.code==='WEAK_PASSWORD'){setErr('');fieldErr('aP',err.message)}else if(err.code==='INVALID_NAME'){setErr('');fieldErr('aN',err.message)}
+      if(['INVALID_EMAIL','DISPOSABLE_EMAIL','EMAIL_EXISTS','NO_ACCOUNT'].includes(err.code)){setErr('');fieldErr('aE',err.message)}else if(err.code==='INVALID_NAME'){setErr('');fieldErr('aN',err.message)}
     }
   };
   function otpScreen(email,info,notice){
@@ -1047,7 +1041,7 @@ function initLogin(){
     form.innerHTML=`<p style="color:var(--bone-2)">${notice?esc(notice)+' ':''}Enter the 6-digit code we emailed to <b>${esc(email)}</b>.</p>
      <div class="otp" id="otp">${[0,1,2,3,4,5].map(i=>`<input inputmode="numeric" autocomplete="${i?'off':'one-time-code'}" maxlength="1" aria-label="Digit ${i+1}">`).join('')}</div>
      <p class="ferr" id="aErr" role="alert"></p>
-     <button class="btn block" type="submit" id="vBtn">Verify email <span class="arrow">→</span></button>
+     <button class="btn block" type="submit" id="vBtn">Verify &amp; continue <span class="arrow">→</span></button>
      <p class="note" id="expTxt"></p>
      <p class="note"><button type="button" class="rm" id="resend" disabled>Resend code</button> &nbsp; <button type="button" class="rm" id="chg">Use a different email</button></p>`;
     const ins=$$('#otp input');ins[0].focus();
@@ -1064,7 +1058,7 @@ function initLogin(){
       if(exp>0)exp--;if(wait>0)wait--;
     };
     tick();const timer=setInterval(tick,1000);cleanups.push(()=>clearInterval(timer));
-    $('#chg').onclick=()=>{clearInterval(timer);['aSub','aFoot'].forEach(x=>{const e=$('#'+x);if(e)e.style.display=''});$('#aTitle').style.fontSize='';$('#tabs').style.display='';if(gw)gw.style.display='';$('#aTitle').innerHTML=`${chars('Welcome',0)} <span class="ital" style="color:var(--acc)">${chars('back',300)}</span>`;tab='up';$$('#tabs button').forEach(x=>x.classList.toggle('on',x.dataset.t==='up'));draw();bar()};
+    $('#chg').onclick=()=>{clearInterval(timer);['aSub','aFoot'].forEach(x=>{const e=$('#'+x);if(e)e.style.display=''});$('#aTitle').style.fontSize='';$('#tabs').style.display='';if(gw)gw.style.display='';$('#aTitle').innerHTML=`${chars('Welcome',0)} <span class="ital" style="color:var(--acc)">${chars('back',300)}</span>`;$$('#tabs button').forEach(x=>x.classList.toggle('on',x.dataset.t===tab));draw();bar()};
     $('#resend').onclick=async()=>{
       $('#resend').disabled=true;setErr('');
       try{const r=await api('POST','/api/auth/resend-otp',{email});exp=r.expiresInSeconds||300;wait=r.resendInSeconds||60;ins.forEach(i=>i.value='');ins[0].focus();toast('A new code is on its way')}
@@ -1073,7 +1067,7 @@ function initLogin(){
     form.onsubmit=async e=>{
       e.preventDefault();const c=code();if(c.length<6){setErr('Enter all 6 digits.');return}
       const b=$('#vBtn');b.disabled=true;setErr('');
-      try{const r=await api('POST','/api/auth/verify-otp',{email,code:c});clearInterval(timer);st.user=r.user;toast('Email verified. Welcome to Inkdrift');finish()}
+      try{const r=await api('POST','/api/auth/verify-otp',{email,code:c});clearInterval(timer);st.user=r.user;toast('You are in. Welcome to Inkdrift');finish()}
       catch(err){
         b.disabled=false;setErr(err.message);const o=$('#otp');o.classList.remove('err');void o.offsetWidth;o.classList.add('err');
         if(err.code!=='NETWORK'){ins.forEach(i=>i.value='');ins[0].focus()}

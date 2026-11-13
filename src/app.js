@@ -85,18 +85,13 @@ export function createApp({ db, cfg, emailTransport, youpiClient, storage: stora
 
   // ---- Email + password with OTP ----
   const authLimit = limiter(15 * 60_000, 20, byIp);
-  app.post('/api/auth/signup', authLimit, wrap(async (req, res) => res.status(201).json(await auth.signup(req.body ?? {}))));
+  app.post('/api/auth/start', authLimit, limiter(15 * 60_000, 10, byIpEmail), wrap(async (req, res) => res.status(201).json(await auth.start(req.body ?? {}))));
   app.post('/api/auth/verify-otp', limiter(15 * 60_000, 30, byIpEmail), wrap(async (req, res) => {
     const user = await auth.verifyOtp(req.body?.email, req.body?.code);
     const s = await startSession(req, res, user);
     res.json({ user, csrfToken: s.csrf });
   }));
   app.post('/api/auth/resend-otp', limiter(15 * 60_000, 15, byIpEmail), wrap(async (req, res) => res.json(await auth.resendOtp(req.body?.email))));
-  app.post('/api/auth/login', limiter(15 * 60_000, 10, byIpEmail), wrap(async (req, res) => {
-    const user = await auth.login(req.body?.email, req.body?.password);
-    const s = await startSession(req, res, user);
-    res.json({ user, csrfToken: s.csrf });
-  }));
   app.post('/api/auth/logout', wrap(async (req, res) => {
     await destroySession(db, req.sessionRaw);
     res.clearCookie(cookieName(cfg), cookieOpts(cfg));

@@ -3,7 +3,7 @@
 Node ≥22.5, Express on Vercel serverless, Turso (libSQL) database, Vercel Blob file storage. Frontend is `public/index.html` (same design as the preview).
 
 ## 1. Features
-Google OAuth (code+PKCE+state+nonce, one account per email) · email/password signup with Resend OTP (6 digits, HMAC-hashed, 5-min expiry, 5 attempts, 60 s resend cooldown, 5 sends/h) · scrypt passwords · httpOnly sessions + CSRF header · server-priced orders and coupons · YOUPI UPI payments with signed webhook, server-side re-confirmation, duplicate prevention · entitlements per pack (bundle = itself + 4 packs) · private ZIP downloads only for owners · purchase history · admin CLI.
+Google OAuth (code+PKCE+state+nonce, one account per email) · passwordless email OTP for both signup and login (6 digits, HMAC-hashed, 5-min expiry, 5 attempts, 60 s resend cooldown, 5 sends/h) · httpOnly sessions + CSRF header · server-priced orders and coupons · YOUPI UPI payments with signed webhook, server-side re-confirmation, duplicate prevention · entitlements per pack (bundle = itself + 4 packs) · private ZIP downloads only for owners · purchase history · admin CLI.
 
 ## 2. APIs / services
 Google OAuth 2.0, Resend (`POST /emails`), YOUPI PG (`POST /api/v1/payments`, `GET /api/v1/payments/{id}`, webhook). Own routes: `/api/auth/*`, `/api/catalog`, `/api/quote`, `/api/orders[/:id[/cancel]]`, `/api/library`, `/api/download/:packId`, `/api/webhooks/youpi`, `/api/me`, `/api/health`.

@@ -45,7 +45,7 @@ try {
   await page.goto(base); await page.waitForFunction(() => document.getElementById('loader').style.display === 'none', null, { timeout: 15000 });
   step('site loaded through the Express server');
   await page.evaluate(() => go('login')); await page.waitForSelector('#aForm input', { timeout: 8000 }); await page.waitForTimeout(1200);
-  await page.click('[data-t="up"]'); await page.fill('#aN', 'Asha Rao'); await page.fill('#aE', 'asha@example.com'); await page.fill('#aP', 'correct-horse-9');
+  await page.click('[data-t="up"]'); await page.fill('#aN', 'Asha Rao'); await page.fill('#aE', 'asha@example.com');
   await page.screenshot({ path: out('1_signup') });
   await page.click('#aForm .btn'); await page.waitForSelector('#otp input', { timeout: 8000 });
   step('signup → OTP screen; email delivered to Resend API stand-in: ' + mails.length);

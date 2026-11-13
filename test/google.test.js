@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { boot, stubServer } from './helpers.js';
+import { sleep, boot, stubServer } from './helpers.js';
 
 const idToken = (claims) => `h.${Buffer.from(JSON.stringify(claims)).toString('base64url')}.s`;
 
@@ -50,7 +50,8 @@ test('Google login links to an existing email account instead of creating a dupl
   assert.equal((await ctx.db.prepare('SELECT COUNT(*) c FROM users').get()).c, 1);
   const row = await ctx.db.prepare('SELECT google_sub,name FROM users').get(); assert.equal(row.google_sub, 'g-777'); assert.equal(row.name, 'Asha Rao');
   assert.equal((await c.get('/api/me')).json.user.email, 'asha@example.com');
-  assert.equal((await owner.post('/api/auth/login', { email: 'asha@example.com', password: 'correct-horse-9' })).status, 200);   // password login still works
+  const again = ctx.client(); await sleep(150);
+  assert.equal((await again.post('/api/auth/start', { mode: 'login', email: 'asha@example.com' })).status, 201);   // the email OTP login still works for the same account
   await stub.close(); await ctx.close();
 });
 

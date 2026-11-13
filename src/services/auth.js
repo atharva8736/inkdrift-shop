@@ -1,4 +1,4 @@
-import { uuid, hashPassword, verifyPassword, burnPasswordTime, generateOtp, otpHash, safeEqual } from '../lib/crypto.js';
+import { uuid, generateOtp, otpHash, safeEqual } from '../lib/crypto.js';
 import { HttpError, EMAIL_RE, normEmail } from '../lib/http.js';
 import { audit } from '../db.js';
 import dns from 'node:dns/promises';
@@ -23,17 +23,17 @@ export function createAuthService({ db, cfg, email }) {
     }
   }
 
-  function validateSignup({ name, email: e, password }) {
+  function validateName(name) {
     const n = String(name ?? '').trim();
     if (n.length < 2 || n.length > 80 || !/\p{L}/u.test(n)) throw new HttpError(400, 'INVALID_NAME', 'Enter your name (2 to 80 characters).');
-    if (!EMAIL_RE.test(e) || e.length > 254) throw new HttpError(400, 'INVALID_EMAIL', 'Enter a valid email address.');
-    const p = String(password ?? '');
-    if (p.length < 8 || p.length > 128 || !/[A-Za-z]/.test(p) || !/\d/.test(p)) throw new HttpError(400, 'WEAK_PASSWORD', 'Use 8 or more characters with at least one letter and one number.');
     return n;
+  }
+  function validateEmail(e) {
+    if (!EMAIL_RE.test(e) || e.length > 254) throw new HttpError(400, 'INVALID_EMAIL', 'Enter a valid email address.');
   }
 
   // Creates a fresh OTP and emails it. Enforces the resend cooldown and an hourly cap.
-  async function issueOtp(user) {
+  async function issueOtp(user, purpose = 'login') {
     const t = now();
     const last = await db.prepare('SELECT created_at FROM email_otps WHERE user_id=? ORDER BY created_at DESC LIMIT 1').get(user.id);
     if (last && t - last.created_at < cfg.otp.resendCooldownMs) {
@@ -46,11 +46,11 @@ export function createAuthService({ db, cfg, email }) {
     const id = uuid(), code = generateOtp();
     await db.transaction(async () => {
       await db.prepare('UPDATE email_otps SET consumed_at=? WHERE user_id=? AND consumed_at IS NULL').run(t, user.id); // old codes die
-      await db.prepare('INSERT INTO email_otps(id,user_id,code_hash,expires_at,created_at) VALUES (?,?,?,?,?)')
-        .run(id, user.id, otpHash(cfg.sessionSecret, id, code), t + cfg.otp.ttlMs, t);
+      await db.prepare('INSERT INTO email_otps(id,user_id,purpose,code_hash,expires_at,created_at) VALUES (?,?,?,?,?,?)')
+        .run(id, user.id, purpose, otpHash(cfg.sessionSecret, id, code), t + cfg.otp.ttlMs, t);
     });
     try {
-      await email.sendOtp({ to: user.email, name: user.name, code, ttlMinutes: Math.round(cfg.otp.ttlMs / 60000) });
+      await email.sendOtp({ to: user.email, name: user.name, code, purpose, ttlMinutes: Math.round(cfg.otp.ttlMs / 60000) });
     } catch (e) {
       await db.prepare('DELETE FROM email_otps WHERE id=?').run(id);     // a failed send must not burn the cooldown
       throw e;
@@ -61,41 +61,40 @@ export function createAuthService({ db, cfg, email }) {
   return {
     publicUser,
 
-    async signup(input) {
-      const e = normEmail(input.email);
-      const name = validateSignup({ ...input, email: e });
-      await checkEmailDomain(e);
+    // One entry point for "Log in" and "Create account": nobody has a password, everybody proves the email with a code.
+    async start({ mode, name, email: rawEmail }) {
+      const e = normEmail(rawEmail);
+      validateEmail(e);
       const existing = await byEmail(e);
       if (existing?.status === 'disabled') throw new HttpError(403, 'ACCOUNT_DISABLED', 'This account is disabled.');
-      if (existing?.status === 'active') {
-        throw new HttpError(409, 'EMAIL_EXISTS', existing.password_hash
-          ? 'An account with this email already exists. Log in instead.'
-          : 'This email is registered with Google. Use Continue with Google.');
+      if (mode === 'signup') {
+        const n = validateName(name);
+        if (existing?.status === 'active') throw new HttpError(409, 'EMAIL_EXISTS', 'An account with this email already exists. Log in instead.');
+        await checkEmailDomain(e);
+        let user = existing;
+        if (user) await db.prepare('UPDATE users SET name=?, updated_at=? WHERE id=?').run(n, now(), user.id);
+        else {
+          await db.prepare('INSERT INTO users(id,email,name,status,email_verified,created_at,updated_at) VALUES (?,?,?,?,?,?,?)')
+            .run(uuid(), e, n, 'pending', 0, now(), now());
+          user = await byEmail(e);
+        }
+        return { email: e, mode: 'signup', ...(await issueOtp(user, 'signup')) };
       }
-      const hash = await hashPassword(input.password);
-      let user = existing;
-      if (user) await db.prepare('UPDATE users SET name=?, password_hash=?, updated_at=? WHERE id=?').run(name, hash, now(), user.id);
-      else {
-        const id = uuid();
-        await db.prepare('INSERT INTO users(id,email,name,password_hash,status,email_verified,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?)')
-          .run(id, e, name, hash, 'pending', 0, now(), now());
-        user = await byEmail(e);
-      }
-      const sent = await issueOtp(user);
-      return { email: e, ...sent };
+      if (!existing || existing.status !== 'active') throw new HttpError(404, 'NO_ACCOUNT', 'No account found for this email. Create an account first.');
+      return { email: e, mode: 'login', ...(await issueOtp(existing, 'login')) };
     },
 
     async resendOtp(rawEmail) {
       const user = await byEmail(normEmail(rawEmail));
-      if (!user || user.status !== 'pending') return { ok: true };      // same answer for every email
-      return { ok: true, ...(await issueOtp(user)) };
+      if (!user || user.status === 'disabled') return { ok: true };      // same answer for every email
+      return { ok: true, ...(await issueOtp(user, user.status === 'pending' ? 'signup' : 'login')) };
     },
 
     async verifyOtp(rawEmail, rawCode) {
       const user = await byEmail(normEmail(rawEmail));
       const code = String(rawCode ?? '').trim();
       const invalid = new HttpError(400, 'INVALID_CODE', 'That code is not valid. Check the email and try again.');
-      if (!user || user.status !== 'pending' || !/^\d{6}$/.test(code)) throw invalid;
+      if (!user || !['pending', 'active'].includes(user.status) || !/^\d{6}$/.test(code)) throw invalid;
       const otp = await db.prepare('SELECT * FROM email_otps WHERE user_id=? AND consumed_at IS NULL ORDER BY created_at DESC LIMIT 1').get(user.id);
       if (!otp) throw new HttpError(400, 'CODE_EXPIRED', 'This code has expired. Request a new one.');
       if (otp.expires_at < now()) {
@@ -116,18 +115,8 @@ export function createAuthService({ db, cfg, email }) {
         await db.prepare('UPDATE email_otps SET consumed_at=? WHERE id=?').run(now(), otp.id);
         await db.prepare("UPDATE users SET status='active', email_verified=1, updated_at=? WHERE id=?").run(now(), user.id);
       });
-      await audit(db, user.id, 'signup_verified', user.id);
+      await audit(db, user.id, otp.purpose === 'signup' ? 'signup_verified' : 'login_otp', user.id);
       return publicUser(await byEmail(user.email));
-    },
-
-    async login(rawEmail, password) {
-      const user = await byEmail(normEmail(rawEmail));
-      const bad = new HttpError(401, 'BAD_CREDENTIALS', 'Incorrect email or password.');
-      if (!user || !user.password_hash) { await burnPasswordTime(String(password ?? '')); throw bad; }
-      if (!(await verifyPassword(String(password ?? ''), user.password_hash))) throw bad;
-      if (user.status === 'disabled') throw new HttpError(403, 'ACCOUNT_DISABLED', 'This account is disabled.');
-      if (user.status === 'pending') throw new HttpError(403, 'EMAIL_NOT_VERIFIED', 'Verify your email to finish creating the account.', { email: user.email });
-      return publicUser(user);
     },
 
     // Google sign-in: one account per email. Existing accounts are linked, never duplicated.
