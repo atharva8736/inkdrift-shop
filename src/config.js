@@ -6,8 +6,15 @@ export function loadConfig(env = process.env, overrides = {}) {
   const cfg = {
     env: env.NODE_ENV || 'development',
     port,
-    appUrl: (env.APP_URL || `http://localhost:${port}`).replace(/\/+$/, ''),
-    dbPath: env.DATABASE_PATH || './data/inkdrift.sqlite',
+    // On Vercel the production domain is known automatically; APP_URL overrides it (e.g. for a custom domain).
+    appUrl: (env.APP_URL || (env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${env.VERCEL_PROJECT_PRODUCTION_URL}` : `http://localhost:${port}`)).replace(/\/+$/, ''),
+    // Turso/libSQL in production (DATABASE_URL=libsql://...), a local SQLite file otherwise.
+    dbUrl: env.DATABASE_URL || `file:${env.DATABASE_PATH || './data/inkdrift.sqlite'}`,
+    dbAuthToken: env.DATABASE_AUTH_TOKEN || '',
+    storage: {
+      driver: env.PACK_STORAGE || (env.BLOB_READ_WRITE_TOKEN || env.VERCEL ? 'blob' : 'disk'),
+      blobToken: env.BLOB_READ_WRITE_TOKEN || '',
+    },
     packsDir: env.PACKS_DIR || './private/packs',
     publicDir: env.PUBLIC_DIR || './public',
     trustProxy: env.TRUST_PROXY === undefined ? 1 : int(env.TRUST_PROXY, 1),
@@ -58,10 +65,23 @@ export function validateConfig(cfg) {
   const prod = cfg.env === 'production';
   if (cfg.sessionSecret.length < 32) problems.push('SESSION_SECRET must be at least 32 random characters');
   if (prod && !cfg.appUrl.startsWith('https://')) problems.push('APP_URL must be https:// in production');
+  if (prod && cfg.dbUrl.startsWith('file:')) problems.push('DATABASE_URL (a Turso libsql:// URL) is required in production; a local file would be lost on serverless hosting');
+  if (prod && cfg.dbUrl.startsWith('libsql:') && !cfg.dbAuthToken) problems.push('DATABASE_AUTH_TOKEN is required with a Turso DATABASE_URL');
   if (!cfg.email.apiKey || !cfg.email.from) problems.push('RESEND_API_KEY and EMAIL_FROM are required to send OTP emails');
   if (!cfg.youpi.apiUrl || !cfg.youpi.merchantId || !cfg.youpi.apiKey || !cfg.youpi.webhookSecret) {
     problems.push('YOUPI_API_URL, YOUPI_MERCHANT_ID, YOUPI_MERCHANT_API_KEY and YOUPI_WEBHOOK_SECRET are required for payments');
   }
   if (!!cfg.google.clientId !== !!cfg.google.clientSecret) problems.push('Set both GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET, or neither');
   return problems;
+}
+
+// Problems that make the server unsafe or useless to start. Everything else (email, payments, Google) only disables that feature.
+export function fatalProblems(cfg) {
+  const prod = cfg.env === 'production';
+  const p = [];
+  if (cfg.sessionSecret.length < 32) p.push('SESSION_SECRET (at least 32 random characters)');
+  if (prod && cfg.dbUrl.startsWith('file:')) p.push('DATABASE_URL (Turso libsql:// URL)');
+  if (prod && cfg.dbUrl.startsWith('libsql:') && !cfg.dbAuthToken) p.push('DATABASE_AUTH_TOKEN');
+  if (prod && !cfg.appUrl.startsWith('https://')) p.push('APP_URL (must be https://)');
+  return p;
 }

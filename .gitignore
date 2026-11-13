@@ -3,3 +3,6 @@ data/
 .env
 private/packs/*.zip
 *.sqlite*
+.vercel/
+.env*
+!.env.example

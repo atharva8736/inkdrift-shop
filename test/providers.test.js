@@ -1,6 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
+import os from "node:os";
+import path from "node:path";
 import { boot, stubServer, signupAndVerify } from './helpers.js';
 import { loadConfig } from '../src/config.js';
 import { createEmailService } from '../src/services/email.js';
@@ -47,16 +49,19 @@ test('YOUPI client maps a busy gateway (409) and an unreachable gateway to clear
 });
 
 test('migrations are idempotent and the seed never overwrites a price you changed', async () => {
-  const db = openDb(':memory:'); assert.equal(migrate(db).length, 1); assert.equal(migrate(db).length, 0);
-  const { seedCatalog } = await import('../src/services/catalog.js'); seedCatalog(db);
-  db.prepare("UPDATE products SET price_paise=49900 WHERE id='time'").run(); seedCatalog(db);
-  assert.equal(db.prepare("SELECT price_paise p FROM products WHERE id='time'").get().p, 49900);
-  assert.equal(db.prepare('SELECT COUNT(*) c FROM wallpapers').get().c, 20);
+  const db = openDb({ url: `file:${path.join(os.tmpdir(), 'ink-mig-' + Date.now() + '.sqlite')}` }); assert.equal((await migrate(db)).length, 1); assert.equal((await migrate(db)).length, 0);
+  const { seedCatalog } = await import('../src/services/catalog.js'); await seedCatalog(db);
+  await db.prepare("UPDATE products SET price_paise=49900 WHERE id='time'").run(); await seedCatalog(db);
+  assert.equal((await db.prepare("SELECT price_paise p FROM products WHERE id='time'").get()).p, 49900);
+  assert.equal((await db.prepare('SELECT COUNT(*) c FROM wallpapers').get()).c, 20);
 });
 
 test('config validation flags missing production secrets', async () => {
   const { validateConfig } = await import('../src/config.js');
   const bad = validateConfig(loadConfig({ NODE_ENV: 'production', APP_URL: 'http://x' }));
   assert.ok(bad.length >= 3);
-  assert.equal(validateConfig(loadConfig({ NODE_ENV: 'production', APP_URL: 'https://x.com', SESSION_SECRET: 'y'.repeat(40), RESEND_API_KEY: 'k', EMAIL_FROM: 'a@b.c', YOUPI_API_URL: 'https://p', YOUPI_MERCHANT_ID: 'm', YOUPI_MERCHANT_API_KEY: 'k', YOUPI_WEBHOOK_SECRET: 's' })).length, 0);
+  const { fatalProblems } = await import('../src/config.js');
+  assert.ok(fatalProblems(loadConfig({ NODE_ENV: 'production', APP_URL: 'http://x' })).length >= 3);
+  assert.equal(fatalProblems(loadConfig({ NODE_ENV: 'production', APP_URL: 'https://x.com', SESSION_SECRET: 'y'.repeat(40), DATABASE_URL: 'libsql://x.turso.io', DATABASE_AUTH_TOKEN: 't' })).length, 0);
+  assert.equal(validateConfig(loadConfig({ NODE_ENV: 'production', APP_URL: 'https://x.com', SESSION_SECRET: 'y'.repeat(40), RESEND_API_KEY: 'k', EMAIL_FROM: 'a@b.c', YOUPI_API_URL: 'https://p', YOUPI_MERCHANT_ID: 'm', YOUPI_MERCHANT_API_KEY: 'k', YOUPI_WEBHOOK_SECRET: 's', DATABASE_URL: 'libsql://x.turso.io', DATABASE_AUTH_TOKEN: 't' })).length, 0);
 });

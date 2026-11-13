@@ -24,22 +24,22 @@ const STATUS_FOR = { paid: 'paid', review: 'pending_verification', cancelled: 'c
 export function createOrderService({ db, cfg, youpi }) {
   const now = () => Date.now();
 
-  function quote(userId, rawItems, couponCode) {
+  async function quote(userId, rawItems, couponCode) {
     let ids = [...new Set((Array.isArray(rawItems) ? rawItems : []).map(String))].slice(0, 12);
     if (!ids.length) throw new HttpError(400, 'EMPTY_CART', 'Your cart is empty.');
-    const prods = new Map(db.prepare("SELECT * FROM products WHERE active=1 AND type IN ('pack','bundle')").all().map((p) => [p.id, p]));
+    const prods = new Map((await db.prepare("SELECT * FROM products WHERE active=1 AND type IN ('pack','bundle')").all()).map((p) => [p.id, p]));
     for (const id of ids) if (!prods.has(id)) throw new HttpError(400, 'UNKNOWN_PRODUCT', 'One of the items is no longer available.');
     const packIds = [...prods.values()].filter((p) => p.type === 'pack').map((p) => p.id);
     if (ids.includes('bundle') || packIds.every((p) => ids.includes(p))) ids = ['bundle'];   // bundle always wins
-    const owned = new Set(ownedProductIds(db, userId));
+    const owned = new Set(await ownedProductIds(db, userId));
     for (const id of ids) {
-      const need = packsOf(db, id);
+      const need = await packsOf(db, id);
       if (need.length && need.every((p) => owned.has(p))) throw new HttpError(409, 'ALREADY_OWNED', `You already own ${prods.get(id).name}.`);
     }
     const subtotal = ids.reduce((s, id) => s + prods.get(id).price_paise, 0);
     let percent = 0, code = null;
     if (couponCode) {
-      const c = db.prepare('SELECT * FROM coupons WHERE code=? AND active=1').get(String(couponCode).trim().toUpperCase());
+      const c = await db.prepare('SELECT * FROM coupons WHERE code=? AND active=1').get(String(couponCode).trim().toUpperCase());
       if (!c) throw new HttpError(400, 'BAD_COUPON', 'That discount code is not valid.');
       percent = c.percent; code = c.code;
     }
@@ -49,10 +49,10 @@ export function createOrderService({ db, cfg, youpi }) {
     return { ids, prods, subtotal, discount, amount, code, itemsKey: [...ids].sort().join(',') };
   }
 
-  function view(order, { withCheckout = false } = {}) {
-    const items = db.prepare('SELECT product_id, name, price_paise FROM order_items WHERE order_id=?').all(order.id)
+  async function view(order, { withCheckout = false } = {}) {
+    const items = (await db.prepare('SELECT product_id, name, price_paise FROM order_items WHERE order_id=?').all(order.id))
       .map((i) => ({ productId: i.product_id, name: i.name, pricePaise: i.price_paise }));
-    const pay = db.prepare('SELECT * FROM payments WHERE order_id=?').get(order.id);
+    const pay = await db.prepare('SELECT * FROM payments WHERE order_id=?').get(order.id);
     return {
       id: order.id, status: order.status, currency: order.currency, subtotalPaise: order.subtotal_paise,
       discountPaise: order.discount_paise, amountPaise: order.amount_paise, couponCode: order.coupon_code,
@@ -64,94 +64,94 @@ export function createOrderService({ db, cfg, youpi }) {
     };
   }
 
-  const getOwn = (userId, id) => {
-    const o = db.prepare('SELECT * FROM orders WHERE id=? AND user_id=?').get(id, userId);
+  const getOwn = async (userId, id) => {
+    const o = await db.prepare('SELECT * FROM orders WHERE id=? AND user_id=?').get(id, userId);
     if (!o) throw new HttpError(404, 'ORDER_NOT_FOUND', 'Order not found.');
     return o;
   };
 
-  function grant(order) {
+  async function grant(order) {
     const ins = db.prepare('INSERT OR IGNORE INTO entitlements(user_id,product_id,order_id,granted_at) VALUES (?,?,?,?)');
     const t = now();
-    for (const { product_id } of db.prepare('SELECT product_id FROM order_items WHERE order_id=?').all(order.id)) {
-      ins.run(order.user_id, product_id, order.id, t);
-      for (const pack of packsOf(db, product_id)) ins.run(order.user_id, pack, order.id, t);
+    for (const { product_id } of await db.prepare('SELECT product_id FROM order_items WHERE order_id=?').all(order.id)) {
+      await ins.run(order.user_id, product_id, order.id, t);
+      for (const pack of await packsOf(db, product_id)) await ins.run(order.user_id, pack, order.id, t);
     }
     // Re-buying after a revoke restores access.
-    db.prepare('UPDATE entitlements SET revoked_at=NULL, order_id=? WHERE user_id=? AND revoked_at IS NOT NULL AND product_id IN (SELECT product_id FROM entitlements WHERE order_id=?)').run(order.id, order.user_id, order.id);
+    await db.prepare('UPDATE entitlements SET revoked_at=NULL, order_id=? WHERE user_id=? AND revoked_at IS NOT NULL AND product_id IN (SELECT product_id FROM entitlements WHERE order_id=?)').run(order.id, order.user_id, order.id);
   }
 
   // The single place where a gateway state changes an order. Runs in one transaction and is safe to repeat.
   function applyGatewayState(orderId, gw, source) {
-    return db.transaction(() => {
-      const order = db.prepare('SELECT * FROM orders WHERE id=?').get(orderId);
-      const pay = db.prepare('SELECT * FROM payments WHERE order_id=?').get(orderId);
+    return db.transaction(async () => {
+      const order = await db.prepare('SELECT * FROM orders WHERE id=?').get(orderId);
+      const pay = await db.prepare('SELECT * FROM payments WHERE order_id=?').get(orderId);
       if (!order || !pay) return { changed: false, reason: 'unknown' };
       const t = now();
       const outcome = classify(cfg.youpi.unlockPolicy, gw);
       const patch = { status: String(gw.status ?? pay.status), event: gw.event ?? pay.event, settle: gw.settlementState ?? pay.settlement_state, method: gw.method ?? pay.method, utr: gw.utr ?? pay.utr };
-      db.prepare('UPDATE payments SET status=?, event=?, settlement_state=?, method=?, utr=?, updated_at=?, last_checked_at=? WHERE id=?')
+      await db.prepare('UPDATE payments SET status=?, event=?, settlement_state=?, method=?, utr=?, updated_at=?, last_checked_at=? WHERE id=?')
         .run(patch.status, patch.event, patch.settle, patch.method, patch.utr, t, t, pay.id);
       if (order.status === 'paid') return { changed: false, reason: 'already_paid' };       // duplicate event
       if (outcome === 'paid') {
         if (gw.amountPaise !== undefined && Number(gw.amountPaise) !== order.amount_paise) {
-          audit(db, 'system', 'amount_mismatch', orderId, { expected: order.amount_paise, got: gw.amountPaise, source });
+          await audit(db, 'system', 'amount_mismatch', orderId, { expected: order.amount_paise, got: gw.amountPaise, source });
           return { changed: false, reason: 'amount_mismatch' };
         }
-        const { c } = db.prepare("SELECT COUNT(*) c FROM orders WHERE user_id=? AND status='paid' AND paid_at > ?").get(order.user_id, t - 86_400_000);
+        const { c } = await db.prepare("SELECT COUNT(*) c FROM orders WHERE user_id=? AND status='paid' AND paid_at > ?").get(order.user_id, t - 86_400_000);
         if (c >= cfg.orders.maxUnlocksPerUserPerDay) {
-          db.prepare("UPDATE orders SET status='pending_verification', updated_at=? WHERE id=?").run(t, orderId);
-          audit(db, 'system', 'velocity_hold', orderId, { paidLast24h: c });
+          await db.prepare("UPDATE orders SET status='pending_verification', updated_at=? WHERE id=?").run(t, orderId);
+          await audit(db, 'system', 'velocity_hold', orderId, { paidLast24h: c });
           return { changed: true, status: 'pending_verification', reason: 'velocity_hold' };
         }
-        const res = db.prepare("UPDATE orders SET status='paid', paid_at=?, updated_at=? WHERE id=? AND status != 'paid'").run(t, t, orderId);
+        const res = await db.prepare("UPDATE orders SET status='paid', paid_at=?, updated_at=? WHERE id=? AND status != 'paid'").run(t, t, orderId);
         if (res.changes === 0) return { changed: false, reason: 'already_paid' };
-        db.prepare('UPDATE payments SET verified_at=? WHERE id=?').run(t, pay.id);
-        grant(order);
-        audit(db, 'system', 'order_paid', orderId, { source, event: gw.event ?? gw.status, late: !OPEN.includes(order.status) });
+        await db.prepare('UPDATE payments SET verified_at=? WHERE id=?').run(t, pay.id);
+        await grant(order);
+        await audit(db, 'system', 'order_paid', orderId, { source, event: gw.event ?? gw.status, late: !OPEN.includes(order.status) });
         return { changed: true, status: 'paid' };
       }
       const next = STATUS_FOR[outcome];
       if (next === 'pending' || next === order.status) return { changed: false, reason: 'no_change' };
-      db.prepare('UPDATE orders SET status=?, updated_at=? WHERE id=?').run(next, t, orderId);
+      await db.prepare('UPDATE orders SET status=?, updated_at=? WHERE id=?').run(next, t, orderId);
       return { changed: true, status: next };
-    })();
+    });
   }
 
   async function cancelSilently(order) {
-    const pay = db.prepare('SELECT * FROM payments WHERE order_id=?').get(order.id);
+    const pay = await db.prepare('SELECT * FROM payments WHERE order_id=?').get(order.id);
     if (pay) { try { await youpi.cancelPayment(pay.provider_payment_id); } catch { /* the session may already be closed */ } }
-    db.prepare("UPDATE orders SET status='cancelled', updated_at=? WHERE id=? AND status IN ('created','pending','pending_verification')").run(now(), order.id);
+    await db.prepare("UPDATE orders SET status='cancelled', updated_at=? WHERE id=? AND status IN ('created','pending','pending_verification')").run(now(), order.id);
   }
 
   return {
     quote, view, classify: (g) => classify(cfg.youpi.unlockPolicy, g), applyGatewayState,
 
     async create(user, { items, couponCode, idempotencyKey }) {
-      const q = quote(user.id, items, couponCode);
+      const q = await quote(user.id, items, couponCode);
       const idem = idempotencyKey ? String(idempotencyKey).slice(0, 100) : null;
       if (idem) {
-        const dup = db.prepare('SELECT * FROM orders WHERE user_id=? AND idempotency_key=?').get(user.id, idem);
+        const dup = await db.prepare('SELECT * FROM orders WHERE user_id=? AND idempotency_key=?').get(user.id, idem);
         if (dup) {
           if (dup.items_key !== q.itemsKey) throw new HttpError(409, 'IDEMPOTENCY_CONFLICT', 'That request key was already used for a different cart.');
-          return { order: view(dup, { withCheckout: true }), reused: true };
+          return { order: await view(dup, { withCheckout: true }), reused: true };
         }
       }
       // Never run two payments for one cart: reuse the live one, retire anything stale.
-      for (const o of db.prepare("SELECT * FROM orders WHERE user_id=? AND status IN ('created','pending') ORDER BY created_at DESC").all(user.id)) {
-        const pay = db.prepare('SELECT * FROM payments WHERE order_id=?').get(o.id);
+      for (const o of await db.prepare("SELECT * FROM orders WHERE user_id=? AND status IN ('created','pending') ORDER BY created_at DESC").all(user.id)) {
+        const pay = await db.prepare('SELECT * FROM payments WHERE order_id=?').get(o.id);
         if (o.items_key === q.itemsKey && o.coupon_code === q.code && pay?.checkout_url && now() - o.created_at < cfg.orders.pendingWindowMs) {
-          return { order: view(o, { withCheckout: true }), reused: true };
+          return { order: await view(o, { withCheckout: true }), reused: true };
         }
         await cancelSilently(o);
       }
       const id = uuid(), t = now();
-      db.transaction(() => {
-        db.prepare(`INSERT INTO orders(id,user_id,status,subtotal_paise,discount_paise,amount_paise,coupon_code,items_key,idempotency_key,created_at,updated_at)
+      await db.transaction(async () => {
+        await db.prepare(`INSERT INTO orders(id,user_id,status,subtotal_paise,discount_paise,amount_paise,coupon_code,items_key,idempotency_key,created_at,updated_at)
           VALUES (?,?,?,?,?,?,?,?,?,?,?)`).run(id, user.id, 'created', q.subtotal, q.discount, q.amount, q.code, q.itemsKey, idem, t, t);
         // Every line stores its own price snapshot; the total was computed on the server, never taken from the browser.
-        for (const pid of q.ids) db.prepare('INSERT INTO order_items(order_id,product_id,name,price_paise) VALUES (?,?,?,?)').run(id, pid, q.prods.get(pid).name, q.prods.get(pid).price_paise);
-      })();
+        for (const pid of q.ids) await db.prepare('INSERT INTO order_items(order_id,product_id,name,price_paise) VALUES (?,?,?,?)').run(id, pid, q.prods.get(pid).name, q.prods.get(pid).price_paise);
+      });
       let gw;
       try {
         gw = await youpi.createPayment({
@@ -160,73 +160,75 @@ export function createOrderService({ db, cfg, youpi }) {
         });
         if (!gw?.paymentId || !gw?.checkoutUrl) throw new HttpError(502, 'GATEWAY_ERROR', 'The payment service returned an incomplete response.');
       } catch (e) {
-        db.prepare("UPDATE orders SET status='failed', updated_at=? WHERE id=?").run(now(), id);
-        audit(db, user.id, 'gateway_create_failed', id, { code: e.code, upstream: e.extra?.upstreamStatus });
+        await db.prepare("UPDATE orders SET status='failed', updated_at=? WHERE id=?").run(now(), id);
+        await audit(db, user.id, 'gateway_create_failed', id, { code: e.code, upstream: e.extra?.upstreamStatus });
         throw e;
       }
-      db.prepare(`INSERT INTO payments(id,order_id,provider,provider_payment_id,checkout_url,status,amount_paise,created_at,updated_at)
+      await db.prepare(`INSERT INTO payments(id,order_id,provider,provider_payment_id,checkout_url,status,amount_paise,created_at,updated_at)
         VALUES (?,?,?,?,?,?,?,?,?)`).run(uuid(), id, 'youpi', String(gw.paymentId), gw.checkoutUrl, String(gw.status ?? 'INITIATED'), q.amount, now(), now());
-      db.prepare("UPDATE orders SET status='pending', updated_at=? WHERE id=?").run(now(), id);
-      audit(db, user.id, 'order_created', id, { amountPaise: q.amount, items: q.ids });
-      return { order: view(db.prepare('SELECT * FROM orders WHERE id=?').get(id), { withCheckout: true }), reused: false };
+      await db.prepare("UPDATE orders SET status='pending', updated_at=? WHERE id=?").run(now(), id);
+      await audit(db, user.id, 'order_created', id, { amountPaise: q.amount, items: q.ids });
+      return { order: await view(await db.prepare('SELECT * FROM orders WHERE id=?').get(id), { withCheckout: true }), reused: false };
     },
 
     // Polls the gateway at most every few seconds so a missed webhook never leaves a paid order stuck.
     async get(userId, id) {
-      let o = getOwn(userId, id);
-      const pay = db.prepare('SELECT * FROM payments WHERE order_id=?').get(id);
+      let o = await getOwn(userId, id);
+      const pay = await db.prepare('SELECT * FROM payments WHERE order_id=?').get(id);
       if (pay && RECHECK.includes(o.status) && now() - o.created_at < 24 * 3_600_000 && now() - (pay.last_checked_at ?? 0) > 3000) {
-        db.prepare('UPDATE payments SET last_checked_at=? WHERE id=?').run(now(), pay.id);
+        await db.prepare('UPDATE payments SET last_checked_at=? WHERE id=?').run(now(), pay.id);
         try {
           const gw = await youpi.getPayment(pay.provider_payment_id);
-          if (String(gw.orderId ?? id) === id) applyGatewayState(id, gw, 'poll');
+          if (String(gw.orderId ?? id) === id) await applyGatewayState(id, gw, 'poll');
         } catch (e) { console.error('[orders] gateway check failed:', e.message); }
-        o = getOwn(userId, id);
+        o = await getOwn(userId, id);
       }
       return view(o, { withCheckout: true });
     },
 
     async cancel(userId, id) {
-      const o = getOwn(userId, id);
+      const o = await getOwn(userId, id);
       if (o.status === 'paid') throw new HttpError(409, 'ALREADY_PAID', 'This order is already paid.');
       if (OPEN.includes(o.status)) await cancelSilently(o);
-      return view(getOwn(userId, id));
+      return view(await getOwn(userId, id));
     },
 
-    list(userId) {
-      return db.prepare('SELECT * FROM orders WHERE user_id=? ORDER BY created_at DESC LIMIT 100').all(userId).map((o) => view(o));
+    async list(userId) {
+      const rows = await db.prepare('SELECT * FROM orders WHERE user_id=? ORDER BY created_at DESC LIMIT 100').all(userId);
+      return Promise.all(rows.map((o) => view(o)));
     },
 
     // Webhook path: the signed message is only a hint. The gateway is asked directly before anything unlocks.
     async applyWebhook(p) {
-      const pay = db.prepare('SELECT * FROM payments WHERE provider_payment_id=?').get(String(p.paymentId ?? ''));
+      const pay = await db.prepare('SELECT * FROM payments WHERE provider_payment_id=?').get(String(p.paymentId ?? ''));
       if (!pay) return { outcome: 'unknown_payment' };
-      const order = db.prepare('SELECT * FROM orders WHERE id=?').get(pay.order_id);
+      const order = await db.prepare('SELECT * FROM orders WHERE id=?').get(pay.order_id);
       if (String(p.orderId ?? '') !== order.id) { audit(db, 'system', 'webhook_order_mismatch', order.id, { got: p.orderId }); return { outcome: 'order_mismatch' }; }
       if (p.amountPaise !== undefined && Number(p.amountPaise) !== pay.amount_paise) {
-        audit(db, 'system', 'webhook_amount_mismatch', order.id, { expected: pay.amount_paise, got: p.amountPaise });
+        await audit(db, 'system', 'webhook_amount_mismatch', order.id, { expected: pay.amount_paise, got: p.amountPaise });
         return { outcome: 'amount_mismatch' };
       }
       const hint = classify(cfg.youpi.unlockPolicy, { event: p.event, status: p.status, settlementState: p.settlementState, method: 'UPI' });
       if (hint !== 'paid') {
-        const r = applyGatewayState(order.id, { event: p.event, status: p.status, settlementState: p.settlementState, utr: p.utr, amountPaise: p.amountPaise }, 'webhook');
+        const r = await applyGatewayState(order.id, { event: p.event, status: p.status, settlementState: p.settlementState, utr: p.utr, amountPaise: p.amountPaise }, 'webhook');
         return { outcome: r.status ?? r.reason };
       }
       const gw = await youpi.getPayment(pay.provider_payment_id);        // throws => caller answers 503 and the gateway retries
       if (String(gw.orderId ?? '') !== order.id || Number(gw.amountPaise) !== pay.amount_paise) {
-        audit(db, 'system', 'confirm_mismatch', order.id, { gw: { orderId: gw.orderId, amountPaise: gw.amountPaise } });
+        await audit(db, 'system', 'confirm_mismatch', order.id, { gw: { orderId: gw.orderId, amountPaise: gw.amountPaise } });
         return { outcome: 'confirm_mismatch' };
       }
       if (classify(cfg.youpi.unlockPolicy, gw) !== 'paid') return { outcome: 'not_confirmed', retry: true };
-      const r = applyGatewayState(order.id, { ...gw, utr: gw.utr ?? p.utr }, 'webhook');
+      const r = await applyGatewayState(order.id, { ...gw, utr: gw.utr ?? p.utr }, 'webhook');
       return { outcome: r.status ?? r.reason };
     },
 
-    library(userId) {
-      const rows = db.prepare(`SELECT e.product_id, e.granted_at, p.name, p.tagline, p.type FROM entitlements e JOIN products p ON p.id=e.product_id
+    async library(userId) {
+      const rows = await db.prepare(`SELECT e.product_id, e.granted_at, p.name, p.tagline, p.type FROM entitlements e JOIN products p ON p.id=e.product_id
         WHERE e.user_id=? AND e.revoked_at IS NULL AND p.type='pack' ORDER BY p.sort`).all(userId);
+      const walls = await db.prepare('SELECT id,pack_id,position,title,preview_desktop,preview_phone FROM wallpapers ORDER BY position').all();
       return rows.map((r) => ({ productId: r.product_id, name: r.name, tagline: r.tagline, grantedAt: r.granted_at,
-        wallpapers: db.prepare('SELECT id,position,title,preview_desktop,preview_phone FROM wallpapers WHERE pack_id=? ORDER BY position').all(r.product_id),
+        wallpapers: walls.filter((w) => w.pack_id === r.product_id).map(({ pack_id, ...w }) => w),
         downloadUrl: `/api/download/${r.product_id}` }));
     },
   };

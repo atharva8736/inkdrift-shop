@@ -2,7 +2,6 @@ import express from 'express';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
-import fs from 'node:fs';
 import path from 'node:path';
 import { sessionMiddleware, csrfGuard, requireAuth, createSession, destroySession, cookieName, cookieOpts } from './services/sessions.js';
 import { createAuthService } from './services/auth.js';
@@ -14,15 +13,17 @@ import { listCatalog, ownedProductIds } from './services/catalog.js';
 import { HttpError, wrap, normEmail } from './lib/http.js';
 import { hmacHex, safeEqual } from './lib/crypto.js';
 import { audit } from './db.js';
+import { createStorage } from './services/storage.js';
 
 // deps lets tests inject an email transport and a gateway client; production uses the real ones.
-export function createApp({ db, cfg, emailTransport, youpiClient }) {
+export function createApp({ db, cfg, emailTransport, youpiClient, storage: storageOverride }) {
   const app = express();
   const email = createEmailService(cfg, emailTransport);
   const youpi = youpiClient ?? createYoupiClient(cfg);
   const auth = createAuthService({ db, cfg, email });
   const google = createGoogleService({ cfg, auth });
   const orders = createOrderService({ db, cfg, youpi });
+  const storage = storageOverride ?? createStorage(cfg);
   const limiter = (windowMs, limit, keyFn) => rateLimit({ windowMs, limit, standardHeaders: true, legacyHeaders: false,
     keyGenerator: keyFn, validate: false, handler: (req, res, next) => next(new HttpError(429, 'RATE_LIMITED', 'Too many attempts. Please wait a moment.')) });
   const byIp = (req) => req.ip;
@@ -49,16 +50,16 @@ export function createApp({ db, cfg, emailTransport, youpiClient }) {
     const ts = Number(req.get('x-gateway-timestamp') ?? NaN);
     const ok1 = safeEqual(sig, `sha256=${hmacHex(secret, raw)}`);
     const ok2 = sig2 && Number.isFinite(ts) ? safeEqual(sig2, `sha256=${hmacHex(secret, `${ts}.${raw.toString('utf8')}`)}`) : null;
-    if (!secret || !ok1 || ok2 === false) { audit(db, 'webhook', 'bad_signature', null, { ip: req.ip }); throw new HttpError(401, 'BAD_SIGNATURE', 'Invalid signature.'); }
+    if (!secret || !ok1 || ok2 === false) { await audit(db, 'webhook', 'bad_signature', null, { ip: req.ip }); throw new HttpError(401, 'BAD_SIGNATURE', 'Invalid signature.'); }
     // Retries keep the original timestamp, so the window must cover the gateway's retry schedule.
     if (Number.isFinite(ts) && (Date.now() - ts > cfg.youpi.webhookMaxAgeMs || ts - Date.now() > 5 * 60_000)) throw new HttpError(401, 'STALE', 'Webhook timestamp outside the accepted window.');
     let p; try { p = JSON.parse(raw.toString('utf8')); } catch { throw new HttpError(400, 'BAD_JSON', 'Invalid JSON.'); }
     const deliveryId = String(req.get('x-gateway-delivery-id') ?? p.deliveryId ?? '');
     if (!deliveryId) throw new HttpError(400, 'NO_DELIVERY_ID', 'Missing delivery id.');
-    const seen = db.prepare('SELECT outcome FROM webhook_events WHERE delivery_id=?').get(deliveryId);
+    const seen = await db.prepare('SELECT outcome FROM webhook_events WHERE delivery_id=?').get(deliveryId);
     if (seen && seen.outcome !== 'retry') return res.json({ ok: true, duplicate: true });
     const r = await orders.applyWebhook(p);
-    db.prepare('INSERT OR REPLACE INTO webhook_events(delivery_id,payment_id,event,outcome,received_at) VALUES (?,?,?,?,?)')
+    await db.prepare('INSERT OR REPLACE INTO webhook_events(delivery_id,payment_id,event,outcome,received_at) VALUES (?,?,?,?,?)')
       .run(deliveryId, p.paymentId ?? null, p.event ?? null, r.retry ? 'retry' : r.outcome, Date.now());
     if (r.retry) return res.status(503).json({ ok: false, retry: true });   // gateway will redeliver
     res.json({ ok: true, outcome: r.outcome });
@@ -69,8 +70,8 @@ export function createApp({ db, cfg, emailTransport, youpiClient }) {
   app.use('/api', sessionMiddleware(db, cfg), csrfGuard);
   app.use('/api', (req, res, next) => { res.set('Cache-Control', 'no-store'); next(); });
 
-  const startSession = (req, res, user) => {
-    const s = createSession(db, cfg, user.id, req);
+  const startSession = async (req, res, user) => {
+    const s = await createSession(db, cfg, user.id, req);
     res.cookie(cookieName(cfg), s.raw, cookieOpts(cfg, s.maxAge));
     return s;
   };
@@ -79,7 +80,7 @@ export function createApp({ db, cfg, emailTransport, youpiClient }) {
   // ---- Public ----
   app.get('/api/health', (req, res) => res.json({ ok: true }));
   app.get('/api/config', (req, res) => res.json({ googleEnabled: google.enabled(), currency: 'INR', otpLength: 6 }));
-  app.get('/api/catalog', (req, res) => res.json({ currency: 'INR', products: listCatalog(db), owned: req.user ? ownedProductIds(db, req.user.id) : [] }));
+  app.get('/api/catalog', wrap(async (req, res) => res.json({ currency: 'INR', products: await listCatalog(db), owned: req.user ? await ownedProductIds(db, req.user.id) : [] })));
   app.get('/api/me', (req, res) => res.json(me(req)));
 
   // ---- Email + password with OTP ----
@@ -87,20 +88,20 @@ export function createApp({ db, cfg, emailTransport, youpiClient }) {
   app.post('/api/auth/signup', authLimit, wrap(async (req, res) => res.status(201).json(await auth.signup(req.body ?? {}))));
   app.post('/api/auth/verify-otp', limiter(15 * 60_000, 30, byIpEmail), wrap(async (req, res) => {
     const user = await auth.verifyOtp(req.body?.email, req.body?.code);
-    const s = startSession(req, res, user);
+    const s = await startSession(req, res, user);
     res.json({ user, csrfToken: s.csrf });
   }));
   app.post('/api/auth/resend-otp', limiter(15 * 60_000, 15, byIpEmail), wrap(async (req, res) => res.json(await auth.resendOtp(req.body?.email))));
   app.post('/api/auth/login', limiter(15 * 60_000, 10, byIpEmail), wrap(async (req, res) => {
     const user = await auth.login(req.body?.email, req.body?.password);
-    const s = startSession(req, res, user);
+    const s = await startSession(req, res, user);
     res.json({ user, csrfToken: s.csrf });
   }));
-  app.post('/api/auth/logout', (req, res) => {
-    destroySession(db, req.sessionRaw);
+  app.post('/api/auth/logout', wrap(async (req, res) => {
+    await destroySession(db, req.sessionRaw);
     res.clearCookie(cookieName(cfg), cookieOpts(cfg));
     res.json({ ok: true });
-  });
+  }));
 
   // ---- Google OAuth 2.0 (authorization code + PKCE) ----
   app.get('/api/auth/google', authLimit, wrap(async (req, res) => {
@@ -114,7 +115,7 @@ export function createApp({ db, cfg, emailTransport, youpiClient }) {
     if (req.query.error) return fail(req.query.error === 'access_denied' ? 'google_cancelled' : 'google_failed');
     try {
       const { user, next } = await google.complete({ code: req.query.code, state: req.query.state, cookieValue: req.cookies?.[google.cookie] });
-      startSession(req, res, user);
+      await startSession(req, res, user);
       res.redirect(next && next !== '/' ? next : '/#dashboard');
     } catch (e) {
       console.error('[google]', e.code ?? e.message);
@@ -127,24 +128,27 @@ export function createApp({ db, cfg, emailTransport, youpiClient }) {
     const out = await orders.create(req.user, { items: req.body?.items, couponCode: req.body?.coupon, idempotencyKey: req.get('idempotency-key') });
     res.status(out.reused ? 200 : 201).json(out);
   }));
-  app.get('/api/orders', requireAuth, (req, res) => res.json({ orders: orders.list(req.user.id) }));
+  app.get('/api/orders', requireAuth, wrap(async (req, res) => res.json({ orders: await orders.list(req.user.id) })));
   app.get('/api/orders/:id', requireAuth, wrap(async (req, res) => res.json({ order: await orders.get(req.user.id, req.params.id) })));
   app.post('/api/orders/:id/cancel', requireAuth, wrap(async (req, res) => res.json({ order: await orders.cancel(req.user.id, req.params.id) })));
-  app.post('/api/quote', requireAuth, (req, res) => {
-    const q = orders.quote(req.user.id, req.body?.items, req.body?.coupon);
+  app.post('/api/quote', requireAuth, wrap(async (req, res) => {
+    const q = await orders.quote(req.user.id, req.body?.items, req.body?.coupon);
     res.json({ items: q.ids, subtotalPaise: q.subtotal, discountPaise: q.discount, amountPaise: q.amount, couponCode: q.code });
-  });
+  }));
 
   // ---- Purchased content ----
-  app.get('/api/library', requireAuth, (req, res) => res.json({ packs: orders.library(req.user.id) }));
+  app.get('/api/library', requireAuth, wrap(async (req, res) => res.json({ packs: await orders.library(req.user.id) })));
   app.get('/api/download/:packId', requireAuth, wrap(async (req, res) => {
-    const row = db.prepare(`SELECT p.file_name FROM entitlements e JOIN products p ON p.id=e.product_id
+    const row = await db.prepare(`SELECT p.file_name FROM entitlements e JOIN products p ON p.id=e.product_id
       WHERE e.user_id=? AND e.product_id=? AND e.revoked_at IS NULL AND p.type='pack'`).get(req.user.id, req.params.packId);
     if (!row?.file_name) throw new HttpError(403, 'NOT_PURCHASED', 'You have not purchased this pack.');
-    const file = path.resolve(cfg.packsDir, path.basename(row.file_name));      // basename blocks path tricks
-    if (!fs.existsSync(file)) throw new HttpError(404, 'FILE_MISSING', 'The file is not available yet. Contact support.');
-    audit(db, req.user.id, 'download', req.params.packId);
-    res.download(file, path.basename(row.file_name));
+    const name = path.basename(row.file_name);
+    const f = await storage.open(name);
+    if (!f) throw new HttpError(404, 'FILE_MISSING', 'The file is not available yet. Contact support.');
+    await audit(db, req.user.id, 'download', req.params.packId);
+    res.set({ 'Content-Type': 'application/zip', 'Content-Disposition': `attachment; filename="${name}"`, 'Cache-Control': 'private, no-store', ...(f.size ? { 'Content-Length': String(f.size) } : {}) });
+    f.stream.on('error', (e) => { console.error('[download]', e.message); res.destroy(e); });
+    f.stream.pipe(res);
   }));
 
   app.use('/api', (req, res, next) => next(new HttpError(404, 'NOT_FOUND', 'Not found.')));

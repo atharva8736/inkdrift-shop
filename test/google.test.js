@@ -33,12 +33,12 @@ test('Google login: redirects to Google with state+PKCE, then creates the accoun
   assert.equal(g.lastForm.get('code'), 'abc'); assert.equal(g.lastForm.get('client_secret'), 'gsecret'); assert.ok(g.lastForm.get('code_verifier'));
   const me = (await c.get('/api/me')).json.user;
   assert.equal(me.email, 'maya@gmail.com'); assert.equal(me.name, 'Maya Iyer'); assert.match(me.avatarUrl, /googleusercontent/);
-  const row = ctx.db.prepare('SELECT status,email_verified,google_sub,password_hash FROM users').get();
+  const row = await ctx.db.prepare('SELECT status,email_verified,google_sub,password_hash FROM users').get();
   assert.deepEqual({ ...row }, { status: 'active', email_verified: 1, google_sub: 'g-123', password_hash: null });
   // logging out and in again reuses the same account
   await c.post('/api/auth/logout'); assert.equal((await c.get('/api/me')).json.user, null);
   const again = await start(c); await c.get(`/api/auth/google/callback?code=zzz&state=${again.state}`);
-  assert.equal(ctx.db.prepare('SELECT COUNT(*) c FROM users').get().c, 1);
+  assert.equal((await ctx.db.prepare('SELECT COUNT(*) c FROM users').get()).c, 1);
   await stub.close(); await ctx.close();
 });
 
@@ -47,8 +47,8 @@ test('Google login links to an existing email account instead of creating a dupl
   const { signupAndVerify } = await import('./helpers.js');
   const owner = await signupAndVerify(ctx, 'Asha Rao', 'asha@example.com');
   const c = ctx.client(); const { state } = await start(c); await c.get(`/api/auth/google/callback?code=c&state=${state}`);
-  assert.equal(ctx.db.prepare('SELECT COUNT(*) c FROM users').get().c, 1);
-  const row = ctx.db.prepare('SELECT google_sub,name FROM users').get(); assert.equal(row.google_sub, 'g-777'); assert.equal(row.name, 'Asha Rao');
+  assert.equal((await ctx.db.prepare('SELECT COUNT(*) c FROM users').get()).c, 1);
+  const row = await ctx.db.prepare('SELECT google_sub,name FROM users').get(); assert.equal(row.google_sub, 'g-777'); assert.equal(row.name, 'Asha Rao');
   assert.equal((await c.get('/api/me')).json.user.email, 'asha@example.com');
   assert.equal((await owner.post('/api/auth/login', { email: 'asha@example.com', password: 'correct-horse-9' })).status, 200);   // password login still works
   await stub.close(); await ctx.close();
@@ -65,7 +65,7 @@ test('Google failures are handled: wrong state, cancelled consent, token error, 
   s = await start(c); g.claims = { aud: 'someone-elses-client' }; assert.match(loc(await c.get(`/api/auth/google/callback?code=a&state=${s.state}`)), /auth_error=google_failed/);
   s = await start(c); g.claims = { email_verified: false }; assert.match(loc(await c.get(`/api/auth/google/callback?code=a&state=${s.state}`)), /auth_error=google_failed/);
   s = await start(c); g.claims = { nonce: 'replayed' }; assert.match(loc(await c.get(`/api/auth/google/callback?code=a&state=${s.state}`)), /auth_error=google_failed/);
-  assert.equal(ctx.db.prepare('SELECT COUNT(*) c FROM users').get().c, 0);
+  assert.equal((await ctx.db.prepare('SELECT COUNT(*) c FROM users').get()).c, 0);
   await stub.close(); await ctx.close();
 });
 

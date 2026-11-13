@@ -63,7 +63,7 @@ export function createGoogleService({ cfg, auth }) {
       if (claims.email_verified !== true && claims.email_verified !== 'true') {
         throw new HttpError(403, 'OAUTH_UNVERIFIED', 'Your Google email is not verified.');
       }
-      const user = auth.upsertGoogleUser({ sub: claims.sub, email: claims.email, name: claims.name, picture: claims.picture });
+      const user = await auth.upsertGoogleUser({ sub: claims.sub, email: claims.email, name: claims.name, picture: claims.picture });
       return { user, next: saved.next };
     },
   };

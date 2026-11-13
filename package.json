@@ -12,10 +12,13 @@
     "dev": "node --watch --env-file-if-exists=.env src/server.js",
     "migrate": "node --env-file-if-exists=.env src/migrate.js",
     "admin": "node --env-file-if-exists=.env src/admin.js",
-    "test": "node --test --test-concurrency=1 --test-timeout=30000 test/*.test.js"
+    "test": "node --test --test-concurrency=1 --test-timeout=30000 test/*.test.js",
+    "build:migrations": "node scripts/build-migrations.mjs",
+    "upload-packs": "node --env-file-if-exists=.env scripts/upload-packs.mjs"
   },
   "dependencies": {
-    "better-sqlite3": "^13.1.1",
+    "@libsql/client": "^0.18.0",
+    "@vercel/blob": "^2.9.0",
     "cookie-parser": "^1.4.7",
     "express": "^4.22.3",
     "express-rate-limit": "^7.5.1",

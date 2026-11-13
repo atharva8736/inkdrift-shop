@@ -34,15 +34,15 @@ export async function boot({ cfg: over = {}, failEmail = false } = {}) {
     otp: { resendCooldownMs: 100 },
   };
   for (const [k, v] of Object.entries(over)) overrides[k] = typeof v === "object" ? { ...overrides[k], ...v } : v;
-  const cfg = loadConfig({ SESSION_SECRET: 'x'.repeat(48), APP_URL: 'http://localhost:3000', PUBLIC_DIR: dir, PACKS_DIR: dir }, overrides);
-  const db = openDb(':memory:'); migrate(db); seedCatalog(db);
+  const cfg = loadConfig({ SESSION_SECRET: 'x'.repeat(48), APP_URL: 'http://localhost:3000', PUBLIC_DIR: dir, PACKS_DIR: dir, PACK_STORAGE: "disk" }, overrides);
+  const db = openDb({ url: `file:${path.join(dir, 'test.sqlite')}` }); await migrate(db); await seedCatalog(db);
   const mailbox = [];
   const emailTransport = async (m) => { if (mailbox.failNext || failEmail) { mailbox.failNext = false; throw new Error('smtp down'); } mailbox.push(m); };
   const gw = fakeGateway();
   const app = createApp({ db, cfg, emailTransport, youpiClient: gw });
   const server = await new Promise((r) => { const s = http.createServer(app).listen(0, () => r(s)); });
   const base = `http://127.0.0.1:${server.address().port}`;
-  return { db, cfg, mailbox, gw, base, dir, close: () => new Promise((r) => { server.closeAllConnections?.(); server.close(r); }), client: () => new Client(base) };
+  return { db, cfg, mailbox, gw, base, dir, close: () => new Promise((r) => { server.closeAllConnections?.(); server.close(() => { db.close(); r(); }); }), client: () => new Client(base) };
 }
 
 export class Client {

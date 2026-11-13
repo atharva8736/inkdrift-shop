@@ -1,6 +1,6 @@
 # Inkdrift – store with real backend
 
-Node ≥22.5, Express, SQLite. Frontend is `public/index.html` (same design as the preview).
+Node ≥22.5, Express on Vercel serverless, Turso (libSQL) database, Vercel Blob file storage. Frontend is `public/index.html` (same design as the preview).
 
 ## 1. Features
 Google OAuth (code+PKCE+state+nonce, one account per email) · email/password signup with Resend OTP (6 digits, HMAC-hashed, 5-min expiry, 5 attempts, 60 s resend cooldown, 5 sends/h) · scrypt passwords · httpOnly sessions + CSRF header · server-priced orders and coupons · YOUPI UPI payments with signed webhook, server-side re-confirmation, duplicate prevention · entitlements per pack (bundle = itself + 4 packs) · private ZIP downloads only for owners · purchase history · admin CLI.
@@ -35,16 +35,22 @@ YOUPI is **not a bank-licensed gateway**. It watches your UPI receiving account 
 
 **Unlock policy** `YOUPI_UNLOCK_POLICY`: `observed` (default, your choice) unlocks when YOUPI sees a matching UPI credit alert and the backend re-confirms order id + amount with YOUPI. YOUPI's docs warn alerts (SMS/email) could be spoofed – so `reconciled` (unlock only after statement import) is the safe setting if files are valuable. Limits: ~20 attempts/day per receiving account, one payer at a time per VPA, INR only. Wallpapers use brand characters/logos – check IP risk before selling.
 
-## 7. Database
-SQLite via `src/migrations/001_init.sql`, applied automatically on start or `npm run migrate`. Tables: users, email_otps, sessions, products, product_items, wallpapers, coupons, orders, order_items, payments, webhook_events, entitlements, audit_log. Money in paise. Back up `data/` (e.g. `sqlite3 db ".backup file"`). For multi-server scale, move to Postgres.
+## 7. Database (Turso / libSQL)
+Schema: `src/migrations/001_init.sql` (embedded via `npm run build:migrations` into `src/migrations/index.js`). Tables: users, email_otps, sessions, products, product_items, wallpapers, coupons, orders, order_items, payments, webhook_events, entitlements, audit_log. Money in paise. Migrations and the catalog seed run automatically on the first request after a deploy; `npm run migrate` does the same by hand. Locally (no `DATABASE_URL`) it uses a SQLite file in `data/`.
 
 ## 8. Tests
-`npm install && npm test` → 36/36 backend tests (signup, OTP correct/wrong/expired/resend/limits, Google flow incl. state/nonce/existing user, login/logout/session persistence, pack+bundle purchase, success/failed/cancelled/pending, duplicate prevention, unlock only after confirmed payment, history isolation, downloads, webhook signature/replay). `node e2e/smoke.mjs` – headless Chrome through the real UI (needs `npm i`, Chrome at /usr/bin/google-chrome). Resend/YOUPI/Google are local stand-ins in tests only; **live calls with real credentials were not possible in the build sandbox** – do a real test after setup.
+`npm install && npm test` → 36/36 backend tests (signup, OTP correct/wrong/expired/resend/limits, Google flow incl. state/nonce/existing user, login/logout/session persistence, pack+bundle purchase, success/failed/cancelled/pending, duplicate prevention, unlock only after confirmed payment, history isolation, downloads, webhook signature/replay). `node e2e/smoke.mjs` drives the real UI in headless Chrome. Resend/YOUPI/Google are local stand-ins in tests only; **live calls with real credentials, Turso and Vercel Blob were not possible in the build sandbox**, so do a real test after setup.
 
-## 9. Deploy
-1. Copy the 4 pack ZIPs into `private/packs/` (names in `src/services/catalog.js`).
-2. `npm ci --omit=dev`, create `.env`, `npm start` (use pm2/systemd/Docker) behind nginx/Caddy with HTTPS; `TRUST_PROXY=1`.
-3. Persistent disk for `data/`. Open `/api/health` to verify.
-4. Admin: `npm run admin -- orders | revoke <orderId> | disable <email>`.
+## 9. Deploy on Vercel (serverless)
+Architecture: `public/` is served by Vercel's CDN, `api/index.js` runs the Express app as a function (`vercel.json` routes `/api/*` to it), Turso stores the data, a **private Vercel Blob** store holds the ZIPs.
+
+1. **Turso**: turso.tech → sign up → Create database (region closest to Mumbai) → copy the *URL* (`libsql://...`) and create a *token* → these are `DATABASE_URL` and `DATABASE_AUTH_TOKEN`.
+2. **Vercel Blob**: Vercel dashboard → your project → Storage → Create → Blob → choose **Private** → Connect to the project (this adds `BLOB_READ_WRITE_TOKEN` automatically).
+3. **Upload the 4 ZIPs** into that Blob store using exactly these names: `Inkdrift_Vol1_Old_Money.zip`, `Inkdrift_Vol2_Time.zip`, `Inkdrift_Vol3_Machines.zip`, `Inkdrift_Vol4_Late_Nights.zip` (dashboard upload, or `npm run upload-packs -- <folder>` with the token in `.env`).
+4. **Environment variables** (Project → Settings → Environment Variables, Production): `SESSION_SECRET` (`openssl rand -hex 32`), `DATABASE_URL`, `DATABASE_AUTH_TOKEN`, plus when ready `RESEND_API_KEY`, `EMAIL_FROM`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `YOUPI_API_URL`, `YOUPI_MERCHANT_ID`, `YOUPI_MERCHANT_API_KEY`, `YOUPI_WEBHOOK_SECRET`, `YOUPI_UNLOCK_POLICY`. `APP_URL` is optional (defaults to your production Vercel address; set it for a custom domain).
+5. Redeploy. Open `/api/health` → `{"ok":true}`. If it shows "Server is not configured. Set: …", add the variables it names and redeploy.
+6. Admin CLI against the live DB: put `DATABASE_URL`/`DATABASE_AUTH_TOKEN` in a local `.env`, then `npm run admin -- orders | revoke <orderId> | disable <email>`.
+
+Notes: rate limits are per serverless instance (best effort); OTP attempt limits, cooldowns and duplicate-payment protection are enforced in the database. YOUPI itself still needs its own always-on server (it is not hosted on Vercel).
 
 Contact form and newsletter are still preview-only.
