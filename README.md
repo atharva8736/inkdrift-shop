@@ -66,3 +66,7 @@ Contact form and newsletter are still preview-only.
 - **Front end deterrents** (right-click, drag, selection, copy blocked on previews; transparent overlay in the viewer) are only a deterrent. The real protection is that the original is never sent before purchase.
 - **Adding or replacing artwork**: put clean previews in `private/preview-src` (`d_VolN_0K.jpg` desktop, `p_VolN_0K.jpg` phone), run `scripts/make-previews.py`, commit `public/img`.
 - Tests: `test/protection.test.js` covers non-buyers, buyers and other customers.
+
+## Design credit
+
+The visual redesign follows the "unslop" method by Damir Sokolovsky (https://github.com/heydamir/unslop), licensed CC BY 4.0. Animations and all front-end behaviour are unchanged from the earlier version.
