@@ -228,7 +228,8 @@ export function createOrderService({ db, cfg, youpi }) {
         WHERE e.user_id=? AND e.revoked_at IS NULL AND p.type='pack' ORDER BY p.sort`).all(userId);
       const walls = await db.prepare('SELECT id,pack_id,position,title,preview_desktop,preview_phone FROM wallpapers ORDER BY position').all();
       return rows.map((r) => ({ productId: r.product_id, name: r.name, tagline: r.tagline, grantedAt: r.granted_at,
-        wallpapers: walls.filter((w) => w.pack_id === r.product_id).map(({ pack_id, ...w }) => w),
+        wallpapers: walls.filter((w) => w.pack_id === r.product_id).map(({ pack_id, ...w }) => ({ ...w,
+          clean_desktop: `/api/preview/${r.product_id}/${w.position}`, clean_phone: `/api/preview/${r.product_id}/${w.position}?m=phone` })),
         downloadUrl: `/api/download/${r.product_id}` }));
     },
   };

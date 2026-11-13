@@ -3,6 +3,8 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import path from 'node:path';
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { sessionMiddleware, csrfGuard, requireAuth, createSession, destroySession, cookieName, cookieOpts } from './services/sessions.js';
 import { createAuthService } from './services/auth.js';
 import { createGoogleService } from './services/google.js';
@@ -134,6 +136,21 @@ export function createApp({ db, cfg, emailTransport, youpiClient, storage: stora
 
   // ---- Purchased content ----
   app.get('/api/library', requireAuth, wrap(async (req, res) => res.json({ packs: await orders.library(req.user.id) })));
+  // Clean (un-watermarked) previews: only for people who bought the pack. The public /img files are watermarked.
+  const CLEAN_DIR = fileURLToPath(new URL('../private/preview-src/', import.meta.url));
+  app.get('/api/preview/:packId/:k', requireAuth, wrap(async (req, res) => {
+    const k = Number(req.params.k);
+    if (!Number.isInteger(k) || k < 1 || k > 5) throw new HttpError(404, 'NOT_FOUND', 'Not found.');
+    const row = await db.prepare(`SELECT w.preview_desktop, w.preview_phone FROM entitlements e
+      JOIN wallpapers w ON w.pack_id=e.product_id AND w.position=?
+      WHERE e.user_id=? AND e.product_id=? AND e.revoked_at IS NULL`).get(k, req.user.id, req.params.packId);
+    if (!row) throw new HttpError(403, 'NOT_PURCHASED', 'You have not purchased this pack.');
+    const rel = req.query.m === 'phone' ? row.preview_phone : row.preview_desktop;
+    const file = path.join(CLEAN_DIR, path.basename(rel));
+    if (!fs.existsSync(file)) throw new HttpError(404, 'FILE_MISSING', 'Preview not available.');
+    res.set({ 'Content-Type': 'image/jpeg', 'Cache-Control': 'private, no-store' });
+    fs.createReadStream(file).pipe(res);
+  }));
   app.get('/api/download/:packId', requireAuth, wrap(async (req, res) => {
     const row = await db.prepare(`SELECT p.file_name FROM entitlements e JOIN products p ON p.id=e.product_id
       WHERE e.user_id=? AND e.product_id=? AND e.revoked_at IS NULL AND p.type='pack'`).get(req.user.id, req.params.packId);
