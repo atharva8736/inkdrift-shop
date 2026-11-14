@@ -24,7 +24,19 @@ const STATUS_FOR = { paid: 'paid', review: 'pending_verification', cancelled: 'c
 
 export function createOrderService({ db, cfg, youpi }) {
   const now = () => Date.now();
-  const manual = !!cfg.upi?.id && !cfg.youpi.apiUrl;     // manual UPI unless an automatic gateway is configured
+  const manual = !!cfg.upi?.id && !cfg.youpi.apiUrl;
+  // Manual UPI deadlines. Runs lazily (serverless has no timer) and at most every 20 s per instance.
+  let lastSweep = 0;
+  async function sweep(force = false) {
+    const t = Date.now(); if (!force && t - lastSweep < 20_000) return; lastSweep = t;
+    const stale = await db.prepare(`SELECT o.id, o.status FROM orders o JOIN payments p ON p.order_id=o.id WHERE p.provider='manual_upi' AND (
+        (o.status IN ('created','pending') AND o.created_at < ?) OR (o.status='pending_verification' AND o.updated_at < ?))`).all(t - cfg.orders.manualPendingMs, t - cfg.orders.manualVerifyMs);
+    for (const o of stale) {
+      await db.prepare("UPDATE orders SET status='expired', updated_at=? WHERE id=? AND status IN ('created','pending','pending_verification')").run(t, o.id);
+      await db.prepare("UPDATE payments SET status='EXPIRED', updated_at=? WHERE order_id=?").run(t, o.id);
+      await audit(db, 'system', 'manual_upi_expired', o.id, { was: o.status });
+    }
+  }     // manual UPI unless an automatic gateway is configured
 
   async function quote(userId, rawItems, couponCode) {
     let ids = [...new Set((Array.isArray(rawItems) ? rawItems : []).map(String))].slice(0, 60);
@@ -71,6 +83,7 @@ export function createOrderService({ db, cfg, youpi }) {
         transactionId: pay.provider_payment_id, status: pay.status, utr: pay.utr, method: pay.method,
         checkoutUrl: withCheckout && OPEN.includes(order.status) ? pay.checkout_url : undefined,
         manual: pay.provider === 'manual_upi' || undefined, upi,
+        expiresAt: pay.provider === 'manual_upi' && ['created', 'pending'].includes(order.status) ? order.created_at + cfg.orders.manualPendingMs : undefined,
       } : null,
     };
   }
@@ -138,6 +151,7 @@ export function createOrderService({ db, cfg, youpi }) {
     quote, view, classify: (g) => classify(cfg.youpi.unlockPolicy, g), applyGatewayState,
 
     async create(user, { items, couponCode, idempotencyKey }) {
+      if (manual) await sweep();
       const q = await quote(user.id, items, couponCode);
       const idem = idempotencyKey ? String(idempotencyKey).slice(0, 100) : null;
       if (idem) {
@@ -190,6 +204,7 @@ export function createOrderService({ db, cfg, youpi }) {
 
     // Polls the gateway at most every few seconds so a missed webhook never leaves a paid order stuck.
     async get(userId, id) {
+      if (manual) await sweep(true);
       let o = await getOwn(userId, id);
       const pay = await db.prepare('SELECT * FROM payments WHERE order_id=?').get(id);
       if (pay && pay.provider !== 'manual_upi' && RECHECK.includes(o.status) && now() - o.created_at < 24 * 3_600_000 && now() - (pay.last_checked_at ?? 0) > 3000) {
@@ -205,6 +220,7 @@ export function createOrderService({ db, cfg, youpi }) {
 
     // ---- Manual UPI: the customer reports the bank reference (UTR); the shop owner approves it ----
     async submitUtr(userId, id, rawUtr) {
+      await sweep(true);
       const o = await getOwn(userId, id);
       const pay = await db.prepare('SELECT * FROM payments WHERE order_id=?').get(id);
       if (!pay || pay.provider !== 'manual_upi') throw new HttpError(400, 'NOT_MANUAL', 'This order is not paid by manual UPI.');
@@ -221,13 +237,21 @@ export function createOrderService({ db, cfg, youpi }) {
     },
 
     async adminList() {
-      const rows = await db.prepare(`SELECT o.id, o.status, o.amount_paise, o.created_at, u.email, u.name, p.utr, p.provider_payment_id ref
+      await sweep(true);
+      const rows = await db.prepare(`SELECT o.id, o.status, o.amount_paise, o.created_at, o.paid_at, u.email, u.name, p.utr, p.status pstatus, p.updated_at pupdated,
+          p.verified_at, p.settlement_state, p.provider_payment_id ref
         FROM orders o JOIN users u ON u.id=o.user_id JOIN payments p ON p.order_id=o.id
-        WHERE p.provider='manual_upi' AND (o.status IN ('pending_verification','pending') OR o.created_at > ?) ORDER BY (o.status='pending_verification') DESC, o.created_at DESC LIMIT 200`).all(now() - 14 * 86_400_000);
-      return Promise.all(rows.map(async (r) => ({
-        id: r.id, status: r.status, amountPaise: r.amount_paise, createdAt: r.created_at, email: r.email, name: r.name, utr: r.utr, ref: r.ref,
+        WHERE p.provider='manual_upi' AND o.created_at > ? ORDER BY o.created_at DESC LIMIT 300`).all(now() - 30 * 86_400_000);
+      const orders = await Promise.all(rows.map(async (r) => ({
+        id: r.id, status: r.status, amountPaise: r.amount_paise, createdAt: r.created_at, paidAt: r.paid_at, email: r.email, name: r.name, utr: r.utr, ref: r.ref,
+        utrSubmittedAt: r.utr ? r.pupdated : null, verifiedAt: r.verified_at,
+        // Personal UPI IDs have no API to confirm a credit, so the check is a person comparing the bank history. Shown honestly.
+        verification: r.status === 'paid' ? 'Approved by admin after bank check' : r.status === 'pending_verification' ? 'Waiting for your bank check' : r.status === 'expired' ? (r.utr ? 'Deadline passed' : 'Not paid within the time limit') : r.status === 'failed' ? 'Rejected' : r.utr ? 'Waiting for your bank check' : 'Customer has not paid yet',
         items: (await db.prepare('SELECT name FROM order_items WHERE order_id=?').all(r.id)).map((i) => i.name),
       })));
+      const sum = (f) => orders.filter(f).reduce((a, o) => a + o.amountPaise, 0);
+      return { orders, deadlines: { payMinutes: cfg.orders.manualPendingMs / 60_000, verifyHours: cfg.orders.manualVerifyMs / 3_600_000 },
+        totals: { verifiedPaise: sum((o) => o.status === 'paid'), awaitingPaise: sum((o) => o.status === 'pending_verification') } };
     },
     async adminApprove(adminId, id) {
       return db.transaction(async () => {
@@ -265,6 +289,7 @@ export function createOrderService({ db, cfg, youpi }) {
     },
 
     async list(userId) {
+      if (manual) await sweep();
       const rows = await db.prepare('SELECT * FROM orders WHERE user_id=? ORDER BY created_at DESC LIMIT 100').all(userId);
       return Promise.all(rows.map((o) => view(o)));
     },

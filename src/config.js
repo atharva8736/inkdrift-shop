@@ -57,6 +57,9 @@ export function loadConfig(env = process.env, overrides = {}) {
     },
     orders: {
       pendingWindowMs: int(env.ORDER_PENDING_WINDOW_MINUTES, 15) * 60_000,
+      // Manual UPI: an order nobody paid expires after this long; a submitted UTR the owner never checked expires after the second one.
+      manualPendingMs: int(env.MANUAL_UPI_PAY_WINDOW_MINUTES, 60) * 60_000,
+      manualVerifyMs: int(env.MANUAL_UPI_VERIFY_DEADLINE_HOURS, 48) * 3_600_000,
       maxUnlocksPerUserPerDay: int(env.MAX_PAID_ORDERS_PER_USER_PER_DAY, 10),
     },
   };

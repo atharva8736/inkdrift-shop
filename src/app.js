@@ -132,7 +132,7 @@ export function createApp({ db, cfg, emailTransport, youpiClient, storage: stora
   app.get('/api/orders', requireAuth, wrap(async (req, res) => res.json({ orders: await orders.list(req.user.id) })));
   app.get('/api/orders/:id', requireAuth, wrap(async (req, res) => res.json({ order: await orders.get(req.user.id, req.params.id) })));
   app.post('/api/orders/:id/utr', requireAuth, limiter(60_000, 10, (r) => r.user.id), wrap(async (req, res) => res.json({ order: await orders.submitUtr(req.user.id, req.params.id, req.body?.utr) })));
-  app.get('/api/admin/orders', requireAuth, requireAdmin, wrap(async (req, res) => res.json({ orders: await orders.adminList() })));
+  app.get('/api/admin/orders', requireAuth, requireAdmin, wrap(async (req, res) => res.json(await orders.adminList())));
   app.post('/api/admin/orders/:id/approve', requireAuth, requireAdmin, wrap(async (req, res) => res.json(await orders.adminApprove(req.user.id, req.params.id))));
   app.post('/api/admin/orders/:id/reject', requireAuth, requireAdmin, wrap(async (req, res) => res.json(await orders.adminReject(req.user.id, req.params.id))));
   app.post('/api/orders/:id/cancel', requireAuth, wrap(async (req, res) => res.json({ order: await orders.cancel(req.user.id, req.params.id) })));

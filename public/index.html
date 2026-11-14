@@ -1479,6 +1479,7 @@ function initDone(){
          <li>Pay exactly <b>${inr(o.amountPaise)}</b> (${esc(u.payeeName)}). The note already has your order reference.</li>
          <li>After paying, open the payment details in your UPI app and copy the 12-digit <b>UTR / reference number</b>.</li>
          <li>Enter it below. We check it against our bank and unlock your downloads.</li></ol>
+        ${o.payment.expiresAt?`<p class="note" style="margin:0">This order is held until ${esc(new Date(o.payment.expiresAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}))}. After that it expires and you can start again.</p>`:''}
         <a class="btn" href="${esc(u.link)}" style="justify-content:center">Open my UPI app <span class="arrow">→</span></a>
         <form id="utrF" novalidate style="display:grid;gap:12px"><label class="mono" for="utrI" style="color:var(--mut)">UTR / UPI reference (12 digits)</label>
          <input id="utrI" inputmode="numeric" autocomplete="off" maxlength="14" placeholder="e.g. 412345678901" style="padding:16px;border-radius:12px;border:1px solid var(--line);background:transparent;color:inherit;font:600 20px var(--f-m,monospace)">

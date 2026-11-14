@@ -16,3 +16,9 @@ Then redeploy. Remove YOUPI_API_URL if it is set (it switches the shop to the au
 Test: buy one wallpaper yourself with a coupon or the smallest item, pay yourself from another UPI app, submit the UTR, approve it in /admin.html.
 
 Later, to make it automatic, see the YOUPI section of the README.
+
+## Deadlines and the admin page
+- An order nobody pays expires after 60 minutes (`MANUAL_UPI_PAY_WINDOW_MINUTES`).
+- A submitted UTR you never checked expires after 48 hours (`MANUAL_UPI_VERIFY_DEADLINE_HOURS`). You can still approve it later if the money really arrived.
+- /admin.html has four tabs: Needs your check, Waiting for payment, Verified, Failed / expired, with UTR, order, customer, amount and times.
+- Automatic UTR verification is not possible with a personal UPI ID. It needs a payment gateway (for example PhonePe Payment Gateway) so the shop is told by a signed webhook.
