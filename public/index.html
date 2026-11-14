@@ -1422,6 +1422,7 @@ function initCheckout(){
     try{
       const r=await api('POST','/api/orders',{items:st.cart,coupon:st.coupon});
       const url=r.order.payment&&r.order.payment.checkoutUrl;
+      if(r.order.payment&&r.order.payment.manual){try{history.replaceState(null,'','/?order='+r.order.id+'#done')}catch(_){}go('done');return}
       if(!url)throw{message:'The payment page could not be opened. Please try again.'};
       toast('Redirecting to UPI payment');
       setTimeout(()=>{window.location.assign(url)},400);
@@ -1465,11 +1466,39 @@ function initDone(){
       $('#retry').onclick=()=>{st.cart=o.items.map(i=>i.productId);renderCart();go('checkout')};return;
     }
     const review=o.status==='pending_verification';
+    if(o.payment&&o.payment.manual&&!review){
+      const u=o.payment.upi;
+      if(!u){box.innerHTML='<p>Loading payment details…</p>';return}
+      if(box.dataset.upi===o.id)return;box.dataset.upi=o.id;
+      box.innerHTML=`<span class="sub mono">Order ${esc(o.id.slice(0,8))} · ${inr(o.amountPaise)}</span>
+       <h1 class="cond" style="font-size:clamp(46px,8vw,110px)">Pay with <span class="ital" style="color:var(--acc)">UPI</span></h1>
+       <div class="upi" style="display:grid;gap:26px;max-width:560px;margin:26px auto 0;text-align:left">
+        <div style="background:#fff;border-radius:18px;padding:14px;width:min(260px,70vw);margin:0 auto" aria-label="UPI QR code">${u.qrSvg}</div>
+        <ol style="color:var(--bone-2);font-size:17px;line-height:1.7;padding-left:22px;margin:0">
+         <li>Scan the QR with any UPI app, or pay to <b class="mono" id="upiId">${esc(u.upiId)}</b> <button class="btn ghost" id="cpUpi" type="button" style="padding:4px 12px">Copy</button></li>
+         <li>Pay exactly <b>${inr(o.amountPaise)}</b> (${esc(u.payeeName)}). The note already has your order reference.</li>
+         <li>After paying, open the payment details in your UPI app and copy the 12-digit <b>UTR / reference number</b>.</li>
+         <li>Enter it below. We check it against our bank and unlock your downloads.</li></ol>
+        <a class="btn" href="${esc(u.link)}" style="justify-content:center">Open my UPI app <span class="arrow">→</span></a>
+        <form id="utrF" novalidate style="display:grid;gap:12px"><label class="mono" for="utrI" style="color:var(--mut)">UTR / UPI reference (12 digits)</label>
+         <input id="utrI" inputmode="numeric" autocomplete="off" maxlength="14" placeholder="e.g. 412345678901" style="padding:16px;border-radius:12px;border:1px solid var(--line);background:transparent;color:inherit;font:600 20px var(--f-m,monospace)">
+         <div id="utrErr" role="alert" style="color:#ff7a7a;min-height:20px"></div>
+         <button class="btn" id="utrB" type="submit">I have paid · Submit UTR <span class="arrow">→</span></button></form>
+        <button class="btn ghost" id="cxl" type="button" style="justify-self:center">Cancel order</button></div>`;
+      $('#cpUpi').onclick=()=>{try{navigator.clipboard.writeText(u.upiId);toast('UPI ID copied')}catch(_){toast(u.upiId)}};
+      $('#utrF').onsubmit=async e=>{e.preventDefault();const v=$('#utrI').value.replace(/\s+/g,'');const er=$('#utrErr');er.textContent='';
+        if(!/^\d{12}$/.test(v)){er.textContent='The UTR is a 12-digit number.';return}
+        $('#utrB').disabled=true;try{await api('POST',`/api/orders/${oid}/utr`,{utr:v});box.dataset.upi='';tick(true)}catch(ex){er.textContent=ex.message||'Could not submit.';$('#utrB').disabled=false}};
+      $('#cxl').onclick=async()=>{try{await api('POST',`/api/orders/${oid}/cancel`,{});box.dataset.upi='';tick(true)}catch(e){toast(e.message)}};
+      return;
+    }
+    const manualReview=review&&o.payment&&o.payment.manual;
+    box.dataset.upi='';
     box.innerHTML=`<div class="wait"></div><span class="sub mono">Order ${esc(o.id.slice(0,8))} · ${inr(o.amountPaise)}</span>
      <h1 class="cond" style="font-size:clamp(50px,9vw,120px)">${review?'Verifying':'Confirming'} <span class="ital" style="color:var(--acc)">payment</span></h1>
-     <p style="color:var(--bone-2);font-size:19px;margin-top:20px">${review?'Your payment needs a quick manual check. This can take a little while.':'Waiting for your bank to confirm. This usually takes under a minute after you pay.'} You can leave this page open.</p>
-     <div class="cta" style="justify-content:center;margin-top:30px">${o.payment&&o.payment.checkoutUrl?`<a class="btn ghost" href="${esc(o.payment.checkoutUrl)}">Return to payment</a>`:''}<button class="btn ghost" id="cxl">Cancel payment</button></div>`;
-    $('#cxl').onclick=async()=>{try{await api('POST',`/api/orders/${oid}/cancel`,{});tick(true)}catch(e){toast(e.message)}};
+     <p style="color:var(--bone-2);font-size:19px;margin-top:20px">${manualReview?`We have your UTR (${esc(o.payment.utr||'')}). The shop owner is matching it with the bank credit and will unlock your downloads soon. This page updates by itself, and you can close it and come back from My account.`:review?'Your payment needs a quick manual check. This can take a little while.':'Waiting for your bank to confirm. This usually takes under a minute after you pay.'} You can leave this page open.</p>
+     <div class="cta" style="justify-content:center;margin-top:30px">${o.payment&&o.payment.checkoutUrl?`<a class="btn ghost" href="${esc(o.payment.checkoutUrl)}">Return to payment</a>`:''}${manualReview?'':'<button class="btn ghost" id="cxl">Cancel payment</button>'}</div>`;
+    if($('#cxl'))$('#cxl').onclick=async()=>{try{await api('POST',`/api/orders/${oid}/cancel`,{});tick(true)}catch(e){toast(e.message)}};
   }
   async function tick(once){
     if(stopped)return;

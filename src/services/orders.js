@@ -2,6 +2,7 @@ import { uuid } from '../lib/crypto.js';
 import { HttpError } from '../lib/http.js';
 import { audit } from '../db.js';
 import { loadCoverage, ownedProducts } from './catalog.js';
+import QRCode from 'qrcode';
 
 const OPEN = ['created', 'pending', 'pending_verification'];
 const RECHECK = [...OPEN, 'failed', 'expired', 'cancelled'];     // late payments can still arrive after these
@@ -23,6 +24,7 @@ const STATUS_FOR = { paid: 'paid', review: 'pending_verification', cancelled: 'c
 
 export function createOrderService({ db, cfg, youpi }) {
   const now = () => Date.now();
+  const manual = !!cfg.upi?.id && !cfg.youpi.apiUrl;     // manual UPI unless an automatic gateway is configured
 
   async function quote(userId, rawItems, couponCode) {
     let ids = [...new Set((Array.isArray(rawItems) ? rawItems : []).map(String))].slice(0, 60);
@@ -55,6 +57,12 @@ export function createOrderService({ db, cfg, youpi }) {
     const items = (await db.prepare('SELECT product_id, name, price_paise FROM order_items WHERE order_id=?').all(order.id))
       .map((i) => ({ productId: i.product_id, name: i.name, pricePaise: i.price_paise }));
     const pay = await db.prepare('SELECT * FROM payments WHERE order_id=?').get(order.id);
+    let upi;
+    if (pay?.provider === 'manual_upi' && withCheckout && ['created', 'pending'].includes(order.status)) {
+      const amount = (order.amount_paise / 100).toFixed(2), note = `Inkdrift ${pay.provider_payment_id}`;
+      const link = `upi://pay?pa=${encodeURIComponent(cfg.upi.id)}&pn=${encodeURIComponent(cfg.upi.payeeName)}&am=${amount}&cu=INR&tn=${encodeURIComponent(note)}`;
+      upi = { upiId: cfg.upi.id, payeeName: cfg.upi.payeeName, amount, note, link, qrSvg: await QRCode.toString(link, { type: 'svg', margin: 1, errorCorrectionLevel: 'M' }) };
+    }
     return {
       id: order.id, status: order.status, currency: order.currency, subtotalPaise: order.subtotal_paise,
       discountPaise: order.discount_paise, amountPaise: order.amount_paise, couponCode: order.coupon_code,
@@ -62,6 +70,7 @@ export function createOrderService({ db, cfg, youpi }) {
       payment: pay ? {
         transactionId: pay.provider_payment_id, status: pay.status, utr: pay.utr, method: pay.method,
         checkoutUrl: withCheckout && OPEN.includes(order.status) ? pay.checkout_url : undefined,
+        manual: pay.provider === 'manual_upi' || undefined, upi,
       } : null,
     };
   }
@@ -121,7 +130,7 @@ export function createOrderService({ db, cfg, youpi }) {
 
   async function cancelSilently(order) {
     const pay = await db.prepare('SELECT * FROM payments WHERE order_id=?').get(order.id);
-    if (pay) { try { await youpi.cancelPayment(pay.provider_payment_id); } catch { /* the session may already be closed */ } }
+    if (pay && pay.provider !== 'manual_upi') { try { await youpi.cancelPayment(pay.provider_payment_id); } catch { /* the session may already be closed */ } }
     await db.prepare("UPDATE orders SET status='cancelled', updated_at=? WHERE id=? AND status IN ('created','pending','pending_verification')").run(now(), order.id);
   }
 
@@ -141,7 +150,7 @@ export function createOrderService({ db, cfg, youpi }) {
       // Never run two payments for one cart: reuse the live one, retire anything stale.
       for (const o of await db.prepare("SELECT * FROM orders WHERE user_id=? AND status IN ('created','pending') ORDER BY created_at DESC").all(user.id)) {
         const pay = await db.prepare('SELECT * FROM payments WHERE order_id=?').get(o.id);
-        if (o.items_key === q.itemsKey && o.coupon_code === q.code && pay?.checkout_url && now() - o.created_at < cfg.orders.pendingWindowMs) {
+        if (o.items_key === q.itemsKey && o.coupon_code === q.code && (pay?.checkout_url || pay?.provider === 'manual_upi') && now() - o.created_at < cfg.orders.pendingWindowMs) {
           return { order: await view(o, { withCheckout: true }), reused: true };
         }
         await cancelSilently(o);
@@ -153,6 +162,13 @@ export function createOrderService({ db, cfg, youpi }) {
         // Every line stores its own price snapshot; the total was computed on the server, never taken from the browser.
         for (const pid of q.ids) await db.prepare('INSERT INTO order_items(order_id,product_id,name,price_paise) VALUES (?,?,?,?)').run(id, pid, q.prods.get(pid).name, q.prods.get(pid).price_paise);
       });
+      if (manual) {
+        await db.prepare(`INSERT INTO payments(id,order_id,provider,provider_payment_id,checkout_url,status,amount_paise,method,created_at,updated_at)
+          VALUES (?,?,?,?,?,?,?,?,?,?)`).run(uuid(), id, 'manual_upi', `MU-${id.slice(0, 8).toUpperCase()}`, null, 'AWAITING_PAYMENT', q.amount, 'UPI', now(), now());
+        await db.prepare("UPDATE orders SET status='pending', updated_at=? WHERE id=?").run(now(), id);
+        await audit(db, user.id, 'order_created', id, { amountPaise: q.amount, items: q.ids, mode: 'manual_upi' });
+        return { order: await view(await db.prepare('SELECT * FROM orders WHERE id=?').get(id), { withCheckout: true }), reused: false };
+      }
       let gw;
       try {
         gw = await youpi.createPayment({
@@ -176,7 +192,7 @@ export function createOrderService({ db, cfg, youpi }) {
     async get(userId, id) {
       let o = await getOwn(userId, id);
       const pay = await db.prepare('SELECT * FROM payments WHERE order_id=?').get(id);
-      if (pay && RECHECK.includes(o.status) && now() - o.created_at < 24 * 3_600_000 && now() - (pay.last_checked_at ?? 0) > 3000) {
+      if (pay && pay.provider !== 'manual_upi' && RECHECK.includes(o.status) && now() - o.created_at < 24 * 3_600_000 && now() - (pay.last_checked_at ?? 0) > 3000) {
         await db.prepare('UPDATE payments SET last_checked_at=? WHERE id=?').run(now(), pay.id);
         try {
           const gw = await youpi.getPayment(pay.provider_payment_id);
@@ -187,9 +203,63 @@ export function createOrderService({ db, cfg, youpi }) {
       return view(o, { withCheckout: true });
     },
 
+    // ---- Manual UPI: the customer reports the bank reference (UTR); the shop owner approves it ----
+    async submitUtr(userId, id, rawUtr) {
+      const o = await getOwn(userId, id);
+      const pay = await db.prepare('SELECT * FROM payments WHERE order_id=?').get(id);
+      if (!pay || pay.provider !== 'manual_upi') throw new HttpError(400, 'NOT_MANUAL', 'This order is not paid by manual UPI.');
+      if (o.status === 'paid') throw new HttpError(409, 'ALREADY_PAID', 'This order is already paid.');
+      if (!['pending', 'pending_verification'].includes(o.status)) throw new HttpError(409, 'ORDER_CLOSED', 'This order is closed. Please start a new one.');
+      const utr = String(rawUtr ?? '').replace(/\s+/g, '');
+      if (!/^\d{12}$/.test(utr)) throw new HttpError(400, 'BAD_UTR', 'The UTR (bank reference) is a 12-digit number. Find it in your UPI app under the payment details.');
+      const clash = await db.prepare("SELECT order_id FROM payments WHERE provider='manual_upi' AND utr=? AND order_id != ?").get(utr, id);
+      if (clash) { await audit(db, userId, 'utr_reused', id, { utr }); throw new HttpError(409, 'UTR_USED', 'That UTR was already used for another order.'); }
+      await db.prepare("UPDATE payments SET utr=?, status='UTR_SUBMITTED', updated_at=? WHERE id=?").run(utr, now(), pay.id);
+      await db.prepare("UPDATE orders SET status='pending_verification', updated_at=? WHERE id=?").run(now(), id);
+      await audit(db, userId, 'utr_submitted', id, { utr });
+      return view(await getOwn(userId, id), { withCheckout: true });
+    },
+
+    async adminList() {
+      const rows = await db.prepare(`SELECT o.id, o.status, o.amount_paise, o.created_at, u.email, u.name, p.utr, p.provider_payment_id ref
+        FROM orders o JOIN users u ON u.id=o.user_id JOIN payments p ON p.order_id=o.id
+        WHERE p.provider='manual_upi' AND (o.status IN ('pending_verification','pending') OR o.created_at > ?) ORDER BY (o.status='pending_verification') DESC, o.created_at DESC LIMIT 200`).all(now() - 14 * 86_400_000);
+      return Promise.all(rows.map(async (r) => ({
+        id: r.id, status: r.status, amountPaise: r.amount_paise, createdAt: r.created_at, email: r.email, name: r.name, utr: r.utr, ref: r.ref,
+        items: (await db.prepare('SELECT name FROM order_items WHERE order_id=?').all(r.id)).map((i) => i.name),
+      })));
+    },
+    async adminApprove(adminId, id) {
+      return db.transaction(async () => {
+        const o = await db.prepare('SELECT * FROM orders WHERE id=?').get(id);
+        const pay = await db.prepare('SELECT * FROM payments WHERE order_id=?').get(id);
+        if (!o || pay?.provider !== 'manual_upi') throw new HttpError(404, 'ORDER_NOT_FOUND', 'Order not found.');
+        if (o.status === 'paid') return { status: 'paid', already: true };
+        if (!pay.utr) throw new HttpError(409, 'NO_UTR', 'The customer has not submitted a UTR yet.');
+        const t = now();
+        await db.prepare("UPDATE orders SET status='paid', paid_at=?, updated_at=? WHERE id=?").run(t, t, id);
+        await db.prepare("UPDATE payments SET status='APPROVED', settlement_state='ADMIN_VERIFIED', verified_at=?, updated_at=? WHERE id=?").run(t, t, pay.id);
+        await grant(o);
+        await audit(db, adminId, 'manual_upi_approved', id, { utr: pay.utr, amountPaise: o.amount_paise });
+        return { status: 'paid' };
+      });
+    },
+    async adminReject(adminId, id) {
+      const o = await db.prepare('SELECT * FROM orders WHERE id=?').get(id);
+      const pay = await db.prepare('SELECT * FROM payments WHERE order_id=?').get(id);
+      if (!o || pay?.provider !== 'manual_upi') throw new HttpError(404, 'ORDER_NOT_FOUND', 'Order not found.');
+      if (o.status === 'paid') throw new HttpError(409, 'ALREADY_PAID', 'Already approved. Use the revoke command to undo.');
+      await db.prepare("UPDATE orders SET status='failed', updated_at=? WHERE id=?").run(now(), id);
+      await db.prepare("UPDATE payments SET status='REJECTED', updated_at=? WHERE id=?").run(now(), pay.id);
+      await audit(db, adminId, 'manual_upi_rejected', id, { utr: pay.utr });
+      return { status: 'failed' };
+    },
+
     async cancel(userId, id) {
       const o = await getOwn(userId, id);
       if (o.status === 'paid') throw new HttpError(409, 'ALREADY_PAID', 'This order is already paid.');
+      const mp = await db.prepare('SELECT provider FROM payments WHERE order_id=?').get(id);
+      if (mp?.provider === 'manual_upi' && o.status === 'pending_verification') throw new HttpError(409, 'UNDER_REVIEW', 'Your payment is being checked and cannot be cancelled. Contact support if something is wrong.');
       if (OPEN.includes(o.status)) await cancelSilently(o);
       return view(await getOwn(userId, id));
     },

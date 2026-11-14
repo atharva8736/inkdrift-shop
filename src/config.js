@@ -41,6 +41,9 @@ export function loadConfig(env = process.env, overrides = {}) {
       resendCooldownMs: int(env.OTP_RESEND_COOLDOWN_SECONDS, 60) * 1000,
       maxSendsPerHour: int(env.OTP_MAX_SENDS_PER_HOUR, 5),
     },
+    // Manual UPI: customers pay your UPI ID and submit the UTR; an admin approves. Used when YOUPI is not configured.
+    upi: { id: (env.UPI_ID || '').trim(), payeeName: (env.UPI_PAYEE_NAME || env.BRAND_NAME || 'Inkdrift').trim() },
+    adminEmails: (env.ADMIN_EMAILS || '').split(',').map((x) => x.trim().toLowerCase()).filter(Boolean),
     youpi: {
       apiUrl: (env.YOUPI_API_URL || '').replace(/\/+$/, ''),
       merchantId: env.YOUPI_MERCHANT_ID || '00000000-0000-0000-0000-000000000001',   // YOUPI's seeded default merchant
@@ -71,8 +74,8 @@ export function validateConfig(cfg) {
   if (prod && cfg.dbUrl.startsWith('file:')) problems.push('DATABASE_URL (a Turso libsql:// URL) is required in production; a local file would be lost on serverless hosting');
   if (prod && cfg.dbUrl.startsWith('libsql:') && !cfg.dbAuthToken) problems.push('DATABASE_AUTH_TOKEN is required with a Turso DATABASE_URL');
   if (!cfg.email.apiKey || !cfg.email.from) problems.push('BREVO_API_KEY (or RESEND_API_KEY) and EMAIL_FROM are required to send OTP emails');
-  if (!cfg.youpi.apiUrl || !cfg.youpi.merchantId || !cfg.youpi.apiKey || !cfg.youpi.webhookSecret) {
-    problems.push('YOUPI_API_URL and YOUPI_WEBHOOK_SECRET are required for payments');
+  if (!cfg.upi.id && (!cfg.youpi.apiUrl || !cfg.youpi.webhookSecret)) {
+    problems.push('Set UPI_ID (manual UPI payments) or YOUPI_API_URL and YOUPI_WEBHOOK_SECRET (automatic payments)');
   }
   if (!!cfg.google.clientId !== !!cfg.google.clientSecret) problems.push('Set both GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET, or neither');
   return problems;

@@ -23,7 +23,10 @@ See `.env.example`. Extras: `SESSION_TTL_DAYS, OTP_TTL_SECONDS, OTP_MAX_ATTEMPTS
 **Resend (needs your own domain):**
 resend.com → Domains → add & verify your domain (DNS SPF/DKIM) → API Keys → create → `RESEND_API_KEY`. Set `EMAIL_FROM` to an address on that domain. A failed send returns an error and does not burn the resend cooldown.
 
-## 6. Payment gateway (YOUPI PG) and connecting it to your bank
+## 6. Payments
+**Free manual UPI (default when `UPI_ID` is set and `YOUPI_API_URL` is not):** the customer pays your UPI ID, enters the UTR, and you approve it at `/admin.html` (login with an email listed in `ADMIN_EMAILS`). See `docs/PAYMENTS_SETUP.md`. Nothing unlocks before you approve; each UTR works once.
+
+## 6b. Automatic gateway (YOUPI PG) and connecting it to your bank
 YOUPI is **not a bank-licensed gateway**. It watches your UPI receiving account for credit alerts and matches them to orders. Its own README calls it experimental, not for critical payments; it has no LICENSE file (package.json says "Commercial") – confirm you may use it.
 
 **Connect to your bank**

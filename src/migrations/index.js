@@ -162,4 +162,7 @@ CREATE TABLE variants (
 -- The old pack/bundle products are replaced by per-device ones. Keep the rows so old orders still read correctly.
 UPDATE products SET active = 0 WHERE base_id IS NULL AND type IN ('pack','bundle');
 ` },
+  { name: "003_manual_upi.sql", sql: `-- Manual UPI mode: a bank reference (UTR) can be claimed by one order only.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_payments_manual_utr ON payments(utr) WHERE utr IS NOT NULL AND provider = 'manual_upi';
+` },
 ];

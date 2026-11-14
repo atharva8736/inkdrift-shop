@@ -78,7 +78,9 @@ export function createApp({ db, cfg, emailTransport, youpiClient, storage: stora
     res.cookie(cookieName(cfg), s.raw, cookieOpts(cfg, s.maxAge));
     return s;
   };
-  const me = (req) => ({ user: req.user ?? null, csrfToken: req.csrf ?? null });
+  const isAdmin = (req) => !!req.user && cfg.adminEmails.includes(String(req.user.email).toLowerCase());
+  const requireAdmin = (req, res, next) => (isAdmin(req) ? next() : res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Admins only.' } }));
+  const me = (req) => ({ user: req.user ?? null, csrfToken: req.csrf ?? null, isAdmin: isAdmin(req) });
 
   // ---- Public ----
   app.get('/api/health', (req, res) => res.json({ ok: true }));
@@ -129,6 +131,10 @@ export function createApp({ db, cfg, emailTransport, youpiClient, storage: stora
   }));
   app.get('/api/orders', requireAuth, wrap(async (req, res) => res.json({ orders: await orders.list(req.user.id) })));
   app.get('/api/orders/:id', requireAuth, wrap(async (req, res) => res.json({ order: await orders.get(req.user.id, req.params.id) })));
+  app.post('/api/orders/:id/utr', requireAuth, limiter(60_000, 10, (r) => r.user.id), wrap(async (req, res) => res.json({ order: await orders.submitUtr(req.user.id, req.params.id, req.body?.utr) })));
+  app.get('/api/admin/orders', requireAuth, requireAdmin, wrap(async (req, res) => res.json({ orders: await orders.adminList() })));
+  app.post('/api/admin/orders/:id/approve', requireAuth, requireAdmin, wrap(async (req, res) => res.json(await orders.adminApprove(req.user.id, req.params.id))));
+  app.post('/api/admin/orders/:id/reject', requireAuth, requireAdmin, wrap(async (req, res) => res.json(await orders.adminReject(req.user.id, req.params.id))));
   app.post('/api/orders/:id/cancel', requireAuth, wrap(async (req, res) => res.json({ order: await orders.cancel(req.user.id, req.params.id) })));
   app.post('/api/quote', requireAuth, wrap(async (req, res) => {
     const q = await orders.quote(req.user.id, req.body?.items, req.body?.coupon);

@@ -49,7 +49,7 @@ test('YOUPI client maps a busy gateway (409) and an unreachable gateway to clear
 });
 
 test('migrations are idempotent and the seed never overwrites a price you changed', async () => {
-  const db = openDb({ url: `file:${path.join(os.tmpdir(), 'ink-mig-' + Date.now() + '.sqlite')}` }); assert.equal((await migrate(db)).length, 2); assert.equal((await migrate(db)).length, 0);
+  const db = openDb({ url: `file:${path.join(os.tmpdir(), 'ink-mig-' + Date.now() + '.sqlite')}` }); assert.equal((await migrate(db)).length, 3); assert.equal((await migrate(db)).length, 0);
   const { seedCatalog } = await import('../src/services/catalog.js'); await seedCatalog(db);
   await db.prepare("UPDATE products SET price_paise=49900 WHERE id='time~windows'").run(); await seedCatalog(db);
   assert.equal((await db.prepare("SELECT price_paise p FROM products WHERE id='time~windows'").get()).p, 49900);

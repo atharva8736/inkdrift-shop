@@ -33,7 +33,7 @@ export async function boot({ cfg: over = {}, failEmail = false } = {}) {
     youpi: { apiUrl: 'https://pay.example', merchantId: 'm1', apiKey: 'mk', webhookSecret: SECRET, unlockPolicy: 'observed' },
     otp: { resendCooldownMs: 100 },
   };
-  for (const [k, v] of Object.entries(over)) overrides[k] = typeof v === "object" ? { ...overrides[k], ...v } : v;
+  for (const [k, v] of Object.entries(over)) overrides[k] = (v && typeof v === "object" && !Array.isArray(v)) ? { ...overrides[k], ...v } : v;
   const cfg = loadConfig({ SESSION_SECRET: 'x'.repeat(48), APP_URL: 'http://localhost:3000', PUBLIC_DIR: dir, PACKS_DIR: dir, PACK_STORAGE: "disk" }, overrides);
   const db = openDb({ url: `file:${path.join(dir, 'test.sqlite')}` }); await migrate(db); await seedCatalog(db);
   const mailbox = [];
