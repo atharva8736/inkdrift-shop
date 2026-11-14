@@ -32,7 +32,7 @@ gwBase = `http://127.0.0.1:${gw.address().port}`;
 const PORT = 3999, base = `http://localhost:${PORT}`;
 const srv = spawn('node', ['src/server.js'], { cwd: process.cwd(), env: { ...process.env, PORT: String(PORT), APP_URL: base, NODE_ENV: 'development', DATABASE_PATH: path.join(tmp, 'db.sqlite'), PACKS_DIR: tmp,
   SESSION_SECRET: 'z'.repeat(48), RESEND_API_KEY: 're_x', EMAIL_FROM: 'Inkdrift <no-reply@example.com>', RESEND_API_URL: `http://127.0.0.1:${resend.address().port}/emails`,
-  YOUPI_API_URL: gwBase, YOUPI_MERCHANT_ID: 'm', YOUPI_MERCHANT_API_KEY: 'k', YOUPI_WEBHOOK_SECRET: SECRET }, stdio: ['ignore', 'pipe', 'inherit'] });
+  YOUPI_API_URL: gwBase, YOUPI_MERCHANT_ID: 'm', YOUPI_MERCHANT_API_KEY: 'k', YOUPI_WEBHOOK_SECRET: SECRET, YOUPI_UNLOCK_POLICY: 'observed' }, stdio: ['ignore', 'pipe', 'inherit'] });
 await new Promise((r) => srv.stdout.on('data', (d) => /listening/.test(d) && r()));
 
 const out = (n) => path.join('/home/claude/work', `e2e_${n}.png`);

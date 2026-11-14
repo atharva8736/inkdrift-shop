@@ -30,7 +30,7 @@ export async function boot({ cfg: over = {}, failEmail = false } = {}) {
   for (const f of ['Inkdrift_Vol1_Old_Money', 'Inkdrift_Vol2_Time', 'Inkdrift_Vol3_Machines', 'Inkdrift_Vol4_Late_Nights']) fs.writeFileSync(path.join(dir, f + '.zip'), `ZIPDATA:${f}`);
   const overrides = {
     email: { apiKey: 'k', from: 'Inkdrift <no-reply@example.com>' },
-    youpi: { apiUrl: 'https://pay.example', merchantId: 'm1', apiKey: 'mk', webhookSecret: SECRET },
+    youpi: { apiUrl: 'https://pay.example', merchantId: 'm1', apiKey: 'mk', webhookSecret: SECRET, unlockPolicy: 'observed' },
     otp: { resendCooldownMs: 100 },
   };
   for (const [k, v] of Object.entries(over)) overrides[k] = typeof v === "object" ? { ...overrides[k], ...v } : v;

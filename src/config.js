@@ -43,12 +43,12 @@ export function loadConfig(env = process.env, overrides = {}) {
     },
     youpi: {
       apiUrl: (env.YOUPI_API_URL || '').replace(/\/+$/, ''),
-      merchantId: env.YOUPI_MERCHANT_ID || '',
-      apiKey: env.YOUPI_MERCHANT_API_KEY || '',
+      merchantId: env.YOUPI_MERCHANT_ID || '00000000-0000-0000-0000-000000000001',   // YOUPI's seeded default merchant
+      apiKey: env.YOUPI_MERCHANT_API_KEY || env.YOUPI_WEBHOOK_SECRET || '',   // YOUPI's merchant key is the merchant webhook secret
       webhookSecret: env.YOUPI_WEBHOOK_SECRET || '',
       // 'observed'   = unlock on a bank-alert match (OBSERVED_SUCCESS) or statement match (RECONCILED)
       // 'reconciled' = unlock only after the gateway admin imports a bank statement (RECONCILED)
-      unlockPolicy: env.YOUPI_UNLOCK_POLICY === 'reconciled' ? 'reconciled' : 'observed',
+      unlockPolicy: env.YOUPI_UNLOCK_POLICY === 'observed' ? 'observed' : 'reconciled',   // safe by default; set observed to unlock on a bank alert
       webhookMaxAgeMs: int(env.YOUPI_WEBHOOK_MAX_AGE_MINUTES, 180) * 60_000,
       timeoutMs: int(env.YOUPI_TIMEOUT_MS, 15_000),
     },
@@ -72,7 +72,7 @@ export function validateConfig(cfg) {
   if (prod && cfg.dbUrl.startsWith('libsql:') && !cfg.dbAuthToken) problems.push('DATABASE_AUTH_TOKEN is required with a Turso DATABASE_URL');
   if (!cfg.email.apiKey || !cfg.email.from) problems.push('BREVO_API_KEY (or RESEND_API_KEY) and EMAIL_FROM are required to send OTP emails');
   if (!cfg.youpi.apiUrl || !cfg.youpi.merchantId || !cfg.youpi.apiKey || !cfg.youpi.webhookSecret) {
-    problems.push('YOUPI_API_URL, YOUPI_MERCHANT_ID, YOUPI_MERCHANT_API_KEY and YOUPI_WEBHOOK_SECRET are required for payments');
+    problems.push('YOUPI_API_URL and YOUPI_WEBHOOK_SECRET are required for payments');
   }
   if (!!cfg.google.clientId !== !!cfg.google.clientSecret) problems.push('Set both GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET, or neither');
   return problems;
