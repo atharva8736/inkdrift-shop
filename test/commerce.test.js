@@ -188,7 +188,7 @@ test('cash-on-delivery or counter payments can never unlock a download', async (
   const ctx = await boot(); const c = await signupAndVerify(ctx);
   const { order } = (await buy(c)).json; const id = await pay(ctx, order, { status: 'SUCCESS', method: 'COD', settlementState: 'NOT_BANK_SETTLEMENT' });
   const w = await webhook(ctx, { event: 'SUCCESS', orderId: order.id, amountPaise: order.amountPaise, paymentId: id });
-  assert.equal(w.status, 503);
+  assert.equal(w.status, 200);   // acknowledged, but never unlocks
   assert.equal((await ctx.db.prepare('SELECT COUNT(*) c FROM entitlements').get()).c, 0);
   await ctx.close();
 });

@@ -12,7 +12,7 @@ export function classify(policy, g) {
   const settle = String(g.settlementState ?? '').toUpperCase();
   const upi = String(g.method ?? '').toUpperCase() === 'UPI';
   if (upi && (names.includes('RECONCILED') || settle === 'RECONCILED')) return 'paid';
-  if (policy === 'observed' && upi && settle !== 'NOT_BANK_SETTLEMENT' && names.some((n) => n === 'OBSERVED_SUCCESS' || n === 'SUCCESS')) return 'paid';
+  if (policy === 'observed' && upi && settle !== 'NOT_BANK_SETTLEMENT' && names.includes('OBSERVED_SUCCESS')) return 'paid';
   if (names.includes('MANUAL_REVIEW')) return 'review';
   if (names.includes('CANCELLED')) return 'cancelled';
   if (names.includes('EXPIRED')) return 'expired';
